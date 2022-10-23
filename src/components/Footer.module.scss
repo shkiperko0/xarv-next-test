@@ -1,0 +1,10 @@
+.footer{
+  min-height: 120px;
+  height: 120px;
+  background-color: blueviolet;
+
+  padding: var(--padding);
+  border: var(--border);
+  border-top-left-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+}

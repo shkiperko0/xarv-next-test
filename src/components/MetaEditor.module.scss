@@ -1,0 +1,35 @@
+.meta-editor{
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: white;
+
+    width: fit-content;
+}
+
+.editor-title{
+    font-size: 20px;
+    color: black;
+}
+
+.fields{
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+    background-color: rgb(199, 199, 199);
+}
+
+.field-value{
+    padding: 5px;
+}
+
+.field-array{
+    padding-right: 10px;
+    background-color: rgb(87, 87, 87);
+}
+
+.field-object{
+    padding: 5px;
+    background-color: rgb(87, 87, 87);
+}

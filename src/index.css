@@ -1,0 +1,42 @@
+* {
+    margin: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --border-radius: 10px;
+    --padding: 10px;
+    --gap: 15px;
+    --border: 1px solid black;
+}
+
+html {
+    height: 100%;
+    min-height: 100%;
+}
+
+body {
+    height: 100%;
+    min-height: 100%;
+}
+
+#__next {
+    margin: auto 50px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: var(--gap);
+
+    height: 100%;
+    min-height: 100%;
+}
+
+main {
+    flex: 1;
+    background-color: rgb(195, 223, 144);
+
+    border: var(--border);
+    border-radius: var(--border-radius);
+}
+
