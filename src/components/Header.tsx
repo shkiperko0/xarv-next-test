@@ -1,6 +1,8 @@
-import { createContext, useContext, useState } from "react"
+import { createContext, ReactChildren, useContext, useState } from "react"
 
 import styles from './Header.module.scss'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome' 
 
 function useAuth(){
     const [ user, setUser ] = useState<object | null>(null)
@@ -51,13 +53,65 @@ function TopNavbar(props: any){
     </nav>
 }
 
-export default function Header(props: any){
+interface IHeaderProps{
+    left?: ReactChildren
+    center?: ReactChildren
+    right?: ReactChildren
+}
+
+
+const g_right = <>
+    <button className={styles.login}>Вход</button>
+    <button className={styles.register}>Регистрация</button>
+    <button className={styles.theme}>
+    </button>
+</>
+
+const dropdown = <>
+    <ul className={styles.dropdown}>
+        {
+            ['1', '2', '3', '4'].map(text => <li><a href="#">{text}</a></li>)
+        }
+    </ul>
+</>
+
+const g_center = <>
+    <div className={styles.catalog + ' ' + styles.withdrop}>
+        <div className={styles['icon-burger']}></div>
+        <span>Каталог</span>
+        <div className={styles.dropdown_wrapper}>{dropdown}</div>
+    </div>
+    <div className={styles.search}>
+        <div className={styles['icon-search']}></div>
+        <span>Поиск</span>
+    </div>
+    <div className={styles.forum}>
+        <div className={styles['icon-talks']}></div>
+        <span>Форум</span>
+    </div>
+    <div className={styles.faq}>
+        <div className={styles['icon-qa']}></div>
+        <span>FAQ</span>
+    </div>
+    <div className={styles.menu}></div>
+</>
+
+const g_left = <>
+    <div className={styles.logo}></div>
+</>
+
+export default function Header(props: IHeaderProps){
+    const { 
+        center = g_center, 
+        left = g_left, 
+        right = g_right 
+    } = props
     return <>
+        <div className={styles.header_bump}/>
         <header className={styles.header}>
-            <div>
-                <LogoPanel/>
-                <ProfilePanel/>
-            </div>
+            <div className={styles.left}>{left}</div>
+            <div className={styles.center}>{center}</div>
+            <div className={styles.right}>{right}</div>
         </header>
         <TopNavbar/>
     </>

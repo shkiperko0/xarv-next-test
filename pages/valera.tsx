@@ -1,14 +1,23 @@
 import Page from "src/components/Page"
+import styles from 'styles/Valera.module.scss'
 
 export default () => {
-    const anime = 'Anime in the word'
-    const views = 30, comments = 40
+    const anime = 'Для тебя, Бессмертный (второй сезон) / Fumetsu no Anata e 2nd Season'
+    const views = 100 + Math.round(Math.random() * 1000)
+    const comments = 20 + Math.round(Math.random() * 100)
 
     return <Page name="valera">
-        <div className='blackrow'>
-            <div>{anime}</div>
-            <div>просмотры {views} кометрарии {comments}</div> 
-            <img src="https://animevost.org/uploads/posts/2022-09/1663077766_1.jpg" alt="anim" />
+        <div className={styles.wrapper}>
+            <div className={styles.card}>
+                <div className={styles.bottombar}>
+                    <span>{anime}</span>
+                </div>
+                <div className={styles.topbar}>
+                    <span>Просмотры {views}</span><span>Кометрарии {comments}</span>
+                </div> 
+                <img className={styles.image} src="/anime.jpg" alt="anime" />
+            </div>
         </div>
     </Page>
 }
+
