@@ -93,7 +93,7 @@ interface IPostProps{
     text: string,
 }
 
-function PostsPreview(props: IPostProps){
+export function PostPreview(props: IPostProps){
     const { caption, id, text } = props
     return <div className={styles.post}>
         <a href={`/posts/${id}`}>
@@ -106,6 +106,19 @@ function PostsPreview(props: IPostProps){
     </div>
 }
 
+export function FullPost(props: IPostProps){
+    const { caption, id, text } = props
+    return <div className={styles.post}>
+        <a href={`/posts/${id}`}>
+            <div className={styles.header}>
+                <span className={styles.caption}>{caption}</span>
+            </div>
+        </a>
+        <div className={styles.content} dangerouslySetInnerHTML={{__html: text}}/>
+        <div className={styles.footer}></div>
+    </div>
+}
+
 export default function PostsPreviews(props: IPostPreviewProps){
     const { postsPerPage = mock_posts.length, posts = mock_posts } = props
 
@@ -113,6 +126,6 @@ export default function PostsPreviews(props: IPostPreviewProps){
 
 
     return <div className={styles.posts}>
-        { posts.map(post => <PostsPreview key={post.id} {...post}/>)}
+        { posts.map(post => <PostPreview key={post.id} {...post}/>)}
     </div>
 }

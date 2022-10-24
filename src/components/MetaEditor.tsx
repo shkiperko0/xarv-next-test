@@ -1,6 +1,13 @@
 import styles from './MetaEditor.module.scss'
 import { useState } from 'react'
 
+
+interface IMetaKey{
+    type: 'number' | 'string' | 'object' | 'array'
+
+
+}
+
 export interface IMetaScheme{
     [key: string]: string | IMetaScheme
 }
@@ -11,12 +18,23 @@ interface IMetaEditorProps{
     setData: (data: any) => void
 }
 
-interface IStringFieldProps{
+interface ITypeField<Type>{
     name: string, 
     value_key: string, 
-    value: string, 
-    setValue: (_: string) => void
+    value: Type, 
+    setValue: (_: Type) => void
 }
+
+interface IStringFieldProps extends ITypeField<string>{}
+interface INumberFieldProps extends ITypeField<number>{}
+
+interface ITypeArray<Type>{
+    name: string,
+    array: Type[],
+}
+
+interface StringArrayProps extends ITypeArray<string>{}
+interface NumberArrayProps extends ITypeArray<number>{}
 
 function StringField(props: IStringFieldProps){
     const { value_key, name, setValue, value } = props
@@ -30,13 +48,6 @@ function StringField(props: IStringFieldProps){
             />
         </div>
     </>
-}
-
-interface INumberFieldProps{
-    name: string, 
-    value_key: string, 
-    value: number, 
-    setValue: (_: number) => void
 }
 
 function NumberField(props: INumberFieldProps){
@@ -53,11 +64,6 @@ function NumberField(props: INumberFieldProps){
     </>
 }
 
-interface StringArrayProps{
-    name: string,
-    array: string[],
-}
-
 function StringArray(props: StringArrayProps){
     const { name: key, array: arr } = props
     if(!arr) return <></>
@@ -66,19 +72,11 @@ function StringArray(props: StringArrayProps){
         <span>{key}</span>
         { 
             arr.map((value, index) => 
-                <StringField key={index} {...{ name: `${key}: string[${index}]`, value_key: key, value, setValue: (value: string) => { arr[index] = value }}} />
-            )
+                <StringField key={index} {...{ name: `${key}: string[${index}]`, value_key: key, value, setValue: (value: string) => { arr[index] = value }}} />)
         } 
-        <button onClick={() => {
-            arr.push('')
-            lengthChanged(arr.length)
-        }}>add row</button>
+        <button onClick={() => 
+            { arr.push(''); lengthChanged(arr.length)}}>Add row</button>
     </div>
-}
-
-interface NumberArrayProps{
-    name: string,
-    array: number[],
 }
 
 function NumberArray(props: NumberArrayProps){
@@ -91,44 +89,20 @@ function NumberArray(props: NumberArrayProps){
                 <NumberField key={index} {...{ name: `${key}: number[${index}]`, value_key: key, value, setValue: (value: number) => { arr[index] = value }}} />
             )
         } 
-        <button onClick={() => {
-            arr.push(0)
-            lengthChanged(arr.length)
-        }}>add row</button>
+        <button onClick={() => 
+            { arr.push(0); lengthChanged(arr.length)}}>Add row</button>
     </div>
 }
 
-interface ITypeFN{ 
-    type: string, 
-    ext?: true, 
-    arr?: true, 
-    min?: number, 
-    max?: number 
-}
+function isTypeArray(type_def: string){
+    const a = type_def.indexOf('[')
+    if(a == -1) return { type: type_def }
+    const type = type_def.substring(0, a)
 
-const type_fn = (type_def: string): ITypeFN => {
-    const arr_a = type_def.indexOf('[')
-    if(arr_a == -1) return { type: type_def }
-    const type = type_def.substring(0, arr_a)
+    const b = type_def.indexOf(']', a)
+    if(b == -1) return { type }
 
-    const arr_b = type_def.indexOf(']', arr_a)
-    if(arr_b == -1) return { type }
-
-    const arr = true
-
-    const arr_in = type_def.substring(arr_a + 1, arr_b)
-    //console.log({type, arr_a, arr_b, arr_in})
-
-    if(!arr_in.length) return { type, ext: true, arr }
-    
-    if(arr_in.indexOf('-') != -1){
-        const [min, max] = arr_in.split('-').map(str => parseInt(str, 10))
-        return { type, min, max, arr }
-    }
-
-    const is_plus = arr_in.indexOf('+') != -1 ? true : undefined
-    const min = parseInt(arr_in, 10)
-    return { type, min, ext: is_plus, arr }
+    return { type, isArray: true }
 }
 
 interface IInputs{
@@ -137,7 +111,10 @@ interface IInputs{
 }
 
 function Inputs({ data, scheme }: IInputs){
-    return <>{ Object.keys(scheme).map((key) => <InputValue key={key} key_name={key} scheme={scheme} data={data} />) }</>
+    const cb = function(key: string){
+        return <InputValue key={key} key_name={key} scheme={scheme} data={data} />
+    } 
+    return <>{ Object.keys(scheme).map(key => cb(key)) }</>
 }
 
 interface IInputValue{
@@ -151,10 +128,13 @@ function InputValue({ data, key_name, scheme }: IInputValue){
 
     const setValue = (value: any) => { data[key_name] = value }
 
+    console.log({data, key_name} )
     if(typeof value_type == 'string'){
-        const { arr, type, min, ext, max } = type_fn(value_type)
-        console.log({ key_name, arr, type, min, ext, max })
-        if(arr){
+        const { isArray, type } = isTypeArray(value_type)
+        //console.log({ key_name, arr, type, min, ext, max })
+
+        if(isArray){
+            if(!data[key_name]) data[key_name] = []
             switch(type){
                 case 'number': 
                     return <NumberArray {...{ name: key_name, key: key_name, array: data[key_name] }}/>
@@ -165,11 +145,14 @@ function InputValue({ data, key_name, scheme }: IInputValue){
         }
 
         switch(type){
-            case 'number':
+            case 'number':{
+                if(!data[key_name]) data[key_name] = 0
                 return <NumberField {...{ name: `${key_name}: ${type}`, value_key: key_name, key: key_name, value: data[key_name], setValue}}/>
-            
-            case 'string':
+            }
+            case 'string':{
+                if(!data[key_name]) data[key_name] = ''
                 return <StringField {...{ name: `${key_name}: ${type}`, value_key: key_name, key: key_name, value: data[key_name], setValue}}/>
+            }
         }
     }
     
@@ -183,10 +166,10 @@ function InputValue({ data, key_name, scheme }: IInputValue){
     return <div>wtf type {value_type} with name {key_name}</div>
 }
 
-export default function MetaEditor(props: IMetaEditorProps){
+export function MetaEditor(props: IMetaEditorProps){
     const { scheme, data, setData } = props
     const title = 'Редактор метаданных'
-    const [ view, setView ] = useState(JSON.stringify(data))
+    //const [ view, setView ] = useState(JSON.stringify(data))
 
     return <>
         <div className={styles['meta-editor']}>
@@ -197,7 +180,7 @@ export default function MetaEditor(props: IMetaEditorProps){
             <button 
                 onClick={
                     event => { 
-                        console.log(data)
+                        //console.log(data)
                         setData({... data})
                         event.stopPropagation()
                         event.preventDefault() 

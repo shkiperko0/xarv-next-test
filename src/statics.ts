@@ -1,8 +1,10 @@
 namespace statics {
 
     const xarv = {
-        main: 'https://xarv.ru',
-        api: 'https://api.xarv.ru',
+        main: 'http://192.168.0.25:3000', 
+        //main: 'https://xarv.ru',
+        api: 'http://192.168.0.25:4000',
+        //api: 'https://api.xarv.ru',
     }
 
     export const host = xarv

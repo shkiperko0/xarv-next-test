@@ -2,8 +2,6 @@ import { createContext, ReactChildren, useContext, useState } from "react"
 
 import styles from './Header.module.scss'
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome' 
-
 function useAuth(){
     const [ user, setUser ] = useState<object | null>(null)
 
@@ -39,13 +37,16 @@ function TopNavbar(props: any){
         //['/admin', 'Admin page'],
         //['/ira', 'Author: Ira'],
         //['/valera', 'Author: Valera'],
-        ['/ira', 'Bagirka'],
-        ['/valera', 'CoqDe'],
-        ['/wtf', 'Page 404'],
+        //['/ira', 'Bagirka'],
+        //['/valera', 'CoqDe'],
+        //['/wtf', 'Page 404'],
 
         
         ['/file-manager', 'Файлы'],
         ['/gallery-view', 'Галерея'],
+        ['/wiw-manager', 'Wiw менеджер'],
+        ['/meta-editor', 'Meta редактор'],
+        ['/template-manager', 'TemMan test'],
     ] 
 
     return <nav className={styles.navbar}>
