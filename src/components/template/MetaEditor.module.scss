@@ -1,0 +1,123 @@
+.meta-editor {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: white;
+
+    gap: 10px;
+    width: 100%;
+}
+
+.meta-editor button {
+    padding: 2px 20px;
+    width: fit-content;
+    background-color: white;
+    border-radius: 5px;
+    border: none;
+    box-shadow: 0px 0px 10px 2px black;    
+    transition: all 0.4s ease;
+    cursor: pointer;
+
+    &:hover {
+        background-color: cornflowerblue;
+    }
+}
+
+.editor-title {
+    font-size: 24px;
+    color: black;
+    text-align: center;
+    margin: 15px 0 20px;
+}
+
+.fields {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+    background-color: rgb(199, 199, 199);
+}
+
+.field-value {
+    display: inline-flex;
+    flex-direction: row;
+    gap: 20px 10px;
+    margin-left: 5px;
+    padding: 5px
+}
+
+.field-object {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px;
+    box-shadow: 0px 0px 10px 2px black;
+}
+
+.field-array {
+    // display: flex;
+    // flex-direction: column;
+    // flex-wrap: wrap;
+    // width: 100%;
+    // gap: 3px;
+    // margin-left: 5px;
+    // padding: 5px;
+    // box-shadow: 0px 0px 10px 2px black;
+    display: grid;
+    grid-template-columns: repeat(3, 4fr);
+    gap: 10px;
+    padding: 60px 0 60px;
+    position: relative;
+
+    span {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+    }
+
+    .field-object {
+        span {
+            position: static;
+        }
+    }
+
+    button {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.shell0 {}
+
+.shell1 {
+    // display: grid;
+    // grid-template-columns: repeat(3, 4fr);
+    background-color: rgb(255, 243, 203);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shell2 {
+    // background-color: rgb(195, 238, 38);
+
+}
+
+.shell3 {
+    // background-color: rgb(71, 238, 38);
+}
+
+.shell4 {
+    // background-color: rgb(0, 138, 230);
+}
+
+.shell5 {
+    // background-color: aqua;
+}
+
+.shell6 {
+    // background-color: aqua;
+}

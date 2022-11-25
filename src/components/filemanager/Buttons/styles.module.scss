@@ -1,0 +1,23 @@
+.listButton{
+    display: inline-block;
+}
+
+.button{
+    font-size: 16px;
+    display: inline-block;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+
+.upload{
+    background: rgb(255, 221, 157);
+}
+.mkdir{
+    background-color: aquamarine;
+}
+.rmdir, .fremove{
+    background-color: rgb(251, 169, 169);
+}
+.url{
+    background-color: aquamarine !important;
+}

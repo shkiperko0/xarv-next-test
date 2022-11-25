@@ -1,13 +1,9 @@
 namespace statics {
 
-    const xarv = {
+    export const host = {
         main: 'http://192.168.0.25:3000', 
-        //main: 'https://xarv.ru',
-        api: 'http://192.168.0.25:4000',
-        //api: 'https://api.xarv.ru',
+        api: 'http://192.168.0.25',
     }
-
-    export const host = xarv
 
     export const url = {
         files: '/files'
@@ -28,8 +24,3 @@ namespace statics {
 }  
 
 export default statics
-
-
-// Линковать ./build к ~/Data/html/build
-// mklink /J create_link_dir target_real_dir
-// mklink /J build "./../../../Data/html/build

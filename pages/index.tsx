@@ -1,19 +1,15 @@
 import Head from "next/head";
-import Page from "src/components/Page";
 
-import styles from "src/Common.module.scss"
-import PostsPreview from "src/components/PostPreview";
+import { AdminPanel } from 'src/components/admin'
 
-const aside = <aside className={styles.aside}></aside>
+//import dynamic from 'next/dynamic'
+//const NoSSR_Admin = dynamic(() => import('src/components/admin'), { ssr: false })
 
-export default () => <>
-  <Head>
-    <title>Главная</title>
-  </Head>
-    <Page name='main'>
-      <div className={styles.content}>
-        <PostsPreview/>
-      </div>
-    </Page>
-</>
-    
+export default () => {
+	return <>
+		<Head>
+			<title>Админка</title>
+		</Head>
+		<AdminPanel/>
+	</>
+}
