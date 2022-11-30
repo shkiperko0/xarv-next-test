@@ -153,27 +153,20 @@
 
 
 /* обертка над кнопками */
-.buttons{
-    display: flex;
-    flex-direction: row;
-    gap: 5px;
+.buttons > * {
+    padding: 5px 10px;
+    border-radius: 0;
+    border: 1px solid var(--border-color);
+    background-color: white;
 
-    > * {
-        padding: 5px 10px;
-        border-radius: 0;
-        border: 1px solid var(--border-color);
-        background-color: white;
-
-        &:hover{
-            background-color: gray;
-        }
+    &:hover{
+        background-color: gray;
     }
 }
 
+
 .buttonup{
-
-        opacity: .8;
-
+    opacity: .8;
 }
 
 /* путь */

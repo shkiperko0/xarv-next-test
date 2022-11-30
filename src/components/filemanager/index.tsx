@@ -4,8 +4,8 @@ import { createContext, useEffect, useState, useContext, MouseEvent, useRef, Cha
 import styles from './styles.module.scss'
 import statics from 'src/statics'
 import { Header_Auth, Header_Auth_JSON } from 'src/tools'
-import { Button, Buttons } from './Buttons'
-
+import { Button } from '@components/gui/Button'
+import Buttons from '@components/gui/Buttons'
 
 interface IFileManagerContext {
     ref: MutableRefObject<any>,

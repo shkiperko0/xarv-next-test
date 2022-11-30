@@ -4,7 +4,8 @@ import { IUserProfile } from "src/tools/types"
 interface IAuthContext{
     isLogged: boolean,
     profile: IUserProfile,
-    setProfile: Dispatch<SetStateAction<IUserProfile>>
+    setProfile: Dispatch<SetStateAction<IUserProfile>>,
+    clearProfile(): void,
 }
 
 export const publicProfile: IUserProfile = {
@@ -14,5 +15,11 @@ export const publicProfile: IUserProfile = {
     role: 'public'
 }
 
-export const AuthContext = createContext<IAuthContext>({ isLogged: false, profile: publicProfile } as IAuthContext)
+export const AuthContext = createContext<IAuthContext>({ 
+    isLogged: false, 
+    profile: publicProfile, 
+    setProfile(){}, 
+    clearProfile(){} 
+})
+
 export const useAuth = () => useContext(AuthContext)

@@ -1,7 +1,7 @@
 import { ReactNode, useMemo, useState } from "react"
 import { AuthContext, publicProfile } from "src/contexts/auth"
 import { AuthForm } from "src/forms/auth"
-import { getCookie, getDocument, parseToken } from "src/tools"
+import { clearAuthCookies, getCookie, getDocument, parseToken } from "src/tools"
 import { ITokenPayload_V1, IUserProfile } from "src/tools/types"
 
 function CheckStartupProfile(): IUserProfile {
@@ -28,9 +28,14 @@ export function AuthLayout(props: IAuthLayoutProps){
     const [ profile, setProfile ] = useState<IUserProfile>(startProfile) 
     const isLogged = profile.user_id != 0
 
+    const clearProfile = () => {
+        clearAuthCookies()
+        setProfile(publicProfile)
+    }
+
     return <>
-        <AuthContext.Provider value={{ isLogged, profile, setProfile }}>
-            { (isLogged) ? (props.children) : <AuthForm/> }
+        <AuthContext.Provider value={{ isLogged, profile, setProfile, clearProfile }}>
+            { props.children }
         </AuthContext.Provider>
     </>
 }

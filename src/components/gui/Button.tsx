@@ -1,16 +1,15 @@
 import React, { MouseEventHandler, ReactNode } from "react"
-//import style from "./Button.module.css"
+import { cl } from "src/utils"
+import { styles } from "."
 
-interface IButtonProps{
-    name?: string,
+export interface IButtonProps{
     children?: ReactNode,
     onClick?: MouseEventHandler<HTMLButtonElement>,
-    submit?: true,
+    type?: "button" | "submit" | "reset",
+    className?: string,
 }
 
-export default function Button(props: IButtonProps){
-    const type = props.submit ? 'submit' : undefined
-    return <button className={`btn ${props.name}`} type={type} onClick={props.onClick}>
-        {props.children}
-    </button>
+export function Button(props: IButtonProps){
+    const { children, onClick, type = "button", className } = props
+    return <button className={cl(styles.button, className)} type={type} onClick={onClick}>{children}</button>
 }
