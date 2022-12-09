@@ -1,52 +1,39 @@
 import { Button } from "@components/gui/Button"
-import Buttons from "@components/gui/Buttons"
+import { Buttons }from "@components/gui/Buttons"
 import { useRouter } from "next/router"
 import { useState } from "react"
 import statics from "src/statics"
-import { AnyJSON_fromBase64, GetObjectReflect, useJSONFetch } from "src/tools"
+import { AnyJSON_fromBase64, useJSONFetch } from "src/tools"
 import { getServiceBySlug, IServiceMenuProps, ItemEditMenu, styles } from ".."
+import { svcs_item } from "../models"
 
 export function EditItemMenu(props: IServiceMenuProps){
-    const { query: { svc, index, data: text }, pathname } = useRouter()
+    const { query, pathname, push } = useRouter()
+    const { svc: slug, index, data: text} = query as { [_: string]: string }
+    const [ data = {}, setData ] = useState<object>(AnyJSON_fromBase64(text))
 
-    const [ data = {}, setData ] = useState<object>(AnyJSON_fromBase64(text as string)) 
+    const svc_item = svcs_item[slug]
+    const svc = getServiceBySlug(slug)
+    if(!svc_item || !svc) return <></>
 
-    return <div className={styles.svc_menu}>
-        <ItemEditMenu 
-            fields={GetObjectReflect(data)} 
-            onChange={
-                (field, value) => {
-                    if(typeof data[field] == 'object' && value == undefined) return
-                    setData({ ...data, [field]: value })
-                }
-            }
-            data={data}
-        />
-        {/* <span>{JSON.stringify(data)}</span> */}
-        <span>{JSON.stringify({query: { svc, index }, pathname})}</span>
-    </div>
-}
-
-
-export function EditTestItemMenu(props: IServiceMenuProps){
-    const { query: { svc, index, data: text }, pathname, push } = useRouter()
-    const service = getServiceBySlug(svc as string)
-
-    const { fetch } = useJSONFetch('POST', statics.host.api + service!.apiEditEntry)
-    const [ data = {}, setData ] = useState<object>(AnyJSON_fromBase64(text as string)) 
+    const { fetch } = useJSONFetch('POST', statics.host.api + svc.apiEditEntry)
 
     const goList = () => {
-        push(pathname.replace('[slug]', svc as string))
+        push(pathname.replace('[slug]', slug))
     }
-
+    
     const goSave = () => {
-        fetch(data)
+        fetch(data).then(() => {
+            push(pathname.replace('[slug]', slug))
+        })
         //push(pathname.replace('[slug]', svc as string))
     }
 
+    const { fields } = svc_item
+
     return <div className={styles.svc_menu}>
-        <ItemEditMenu 
-            fields={GetObjectReflect(data)} 
+        <ItemEditMenu className={styles.fields}
+            fields={svc_item.fields.filter(({name}) => name != 'id')} 
             onChange={
                 (field, value) => {
                     if(typeof data[field] == 'object' && value == undefined) return
@@ -56,9 +43,9 @@ export function EditTestItemMenu(props: IServiceMenuProps){
             data={data}
         />
         
-        <Buttons>
-            <Button onClick={goSave}>Save</Button>
-            <Button onClick={goList}>Cancel</Button>
+        <Buttons className={styles.buttons}>
+            <Button className={styles.button_save} onClick={goSave}>Save</Button>
+            <Button className={styles.button_cancel} onClick={goList}>Cancel</Button>    
         </Buttons> 
     </div>
 }

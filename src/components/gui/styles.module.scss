@@ -6,6 +6,7 @@
 .buttons{
     display: flex;
     flex-direction: row;
+    justify-content: space-evenly;
     gap: 5px;
 }
     
@@ -35,4 +36,61 @@
 
 .table{
     border-collapse: collapse;
+}
+
+.input{
+    padding: 2px 5px;
+    width: 250px;
+    background-color: white;
+    border: 1px solid gray;
+    border-radius: 2px;
+
+    &:active, &:hover, &:focus{
+        outline: 1px solid blue;
+    }
+}
+
+.selectwrapper, .optionwrapper{
+    width: 250px;
+}
+
+.option{
+    padding: 2px 5px;
+    width: 250px;
+    background-color: white;
+    border: 1px solid gray;
+    border-radius: 2px;
+
+    // text-align: center;
+
+    &:hover{
+        outline: 1px solid blue;
+    }
+}
+
+.select{
+    width: 250px;
+
+    &wrapper.active > .select{
+        outline: 1px solid blue;
+    }
+
+    &wrapper.active > .select .dropdown{
+        outline: 1px solid rgb(0, 255, 191);
+    }
+
+    .option.active{
+        outline: 1px solid red;
+    }
+}
+
+.dropdown{
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: var(--z-dropdown);
+}
+
+.dropdownwrapper{
+    position: relative;
 }

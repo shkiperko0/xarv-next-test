@@ -24,10 +24,22 @@ export interface IButtonProps<Element=any>{
 }
 
 export type HttpMethod = 'POST' | 'GET' | 'PUT' | 'DELETE' | 'OPTIONS'
-export type JSTypes = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
+export type JSType = "string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"
 
 export interface IObjectField{
     name: string,
-    type: JSTypes,
+    type: JSType,
     value: any
+}
+
+export interface IClassOf<Type=any>{
+    new(): Type,
+    new(_: any): any,
+}
+
+export interface IFieldReflection{
+    name: string,
+    disabled?: true,
+    type: JSType,
+    class?: IClassOf
 }

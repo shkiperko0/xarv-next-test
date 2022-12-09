@@ -1,10 +1,26 @@
-import { cl } from "src/utils"
+import { ReactNode } from "react"
+import { cl, Type2Text } from "src/utils"
 import { styles } from "."
-import { Button } from "./Button"
 
 export interface ITableRowProps<Type=any>{ 
-    data: Type, 
-    index: number 
+    row: Type, 
+    index: number,
+}
+
+interface ITableHeaderWrapperProps<RowType=any, FieldType=any>{
+    field: string,
+    value: FieldType,
+    index: number,
+    row: RowType,
+    children?: ReactNode,
+}
+
+interface ITableCellWrapperProps<RowType=any, FieldType=any>{
+    field: string,
+    value: FieldType,
+    index: number,
+    row: RowType,
+    children?: ReactNode,
 }
 
 export interface ITableProps<Type=any>{
@@ -12,33 +28,55 @@ export interface ITableProps<Type=any>{
     columns?:{
         [name: string]: (props: ITableRowProps) => JSX.Element
     },
-    className?: string
+    headers?:{
+        [name: string]: string
+    }
+    className?: string,
+    headerWrapper?(props: ITableHeaderWrapperProps): JSX.Element
+    cellWrapper?(props: ITableCellWrapperProps): JSX.Element
 }
 
-export function Table(props: ITableProps){
-    const { data, columns, className } = props
-    const hdr = Object.keys(data.length ? data[0] : {})
+function DefaultWrapper(props: ITableCellWrapperProps){
+    const { value } = props
+    return <span>{Type2Text(value, typeof value)}</span>
+}
+
+export function Table(props: ITableProps<object>){
+    const { 
+        data, 
+        columns, 
+        className, 
+        cellWrapper: Wrapper = DefaultWrapper,
+        headers = {}
+    } = props
+
+    const frow = data.length ? data[0] : null
+    const hdr = frow ? Object.keys(frow) : []
 
     return <table className={cl(styles.table, className)}>
         <thead>
             <tr>
-                { hdr.map(hdr => <th><span>{hdr}</span></th>) }
-                { columns && Object.keys(columns).map(column => <th>{column}</th>) }
+                { hdr.map((hdr) => <th key={hdr} ><span>{headers[hdr] ?? hdr}</span></th>) }
+                { columns && Object.keys(columns).map((column) => <th key={column}>{column}</th>) }
             </tr>
         </thead>
         <tbody>
             { 
                 data.map(
-                    (row: object, index) => <tr>
+                    (row: object, index) => <tr key={index}>
                         {  
-                            Object.values(row).map(
-                                value => <td>
-                                    <span>{typeof value == 'object' ? JSON.stringify(value) : value }</span>
+                            Object.entries(row as any).map(
+                                ([field, value], index) => <td key={field}>
+                                    <Wrapper field={field} value={value} row={row} index={index} /> 
                                 </td>
                             )
                         }
                         { 
-                            columns && Object.values(columns).map((Element) => <td><Element data={row} index={index} /></td>)
+                            columns && Object.entries(columns).map(
+                                ([field, Element], index) => <td key={field}>
+                                    <Element row={row} index={index} />
+                                </td>
+                            )
                         }
                     </tr>
                 )

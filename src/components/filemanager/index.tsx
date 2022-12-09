@@ -5,7 +5,9 @@ import styles from './styles.module.scss'
 import statics from 'src/statics'
 import { Header_Auth, Header_Auth_JSON } from 'src/tools'
 import { Button } from '@components/gui/Button'
-import Buttons from '@components/gui/Buttons'
+import { Buttons }from '@components/gui/Buttons'
+import { useWindows } from '@components/taskmanager'
+import { cl } from 'src/utils'
 
 interface IFileManagerContext {
     ref: MutableRefObject<any>,
@@ -43,46 +45,6 @@ function FilePath() {
 
 interface IFileManagerProps {
     path?: string
-}
-
-function PreviewDir() {
-    /*здесь ести в компонениты не пихай куски свг*/
-    // return <>
-    //     <Image src='/images/filemamager/folder2.svg' width={140} height={140}  />
-    // </>
-    return <>
-        <svg className={styles.folderIcon} height="48" viewBox="0 0 48 48" width="48" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 8h-12c-2.21 0-3.98 1.79-3.98 4l-.02 24c0 2.21 1.79 4 4 4h32c2.21 0 4-1.79 4-4v-20c0-2.21-1.79-4-4-4h-16l-4-4z" />
-            <path d="M0 0h48v48h-48z" fill="none" />
-        </svg>
-    </>
-}
-
-const mime2ext = {
-    'image/jpeg': '.jpeg',
-    'text/javascript': '.js',
-    // 'application/octet-stream': '.bin',
-    '*': '.unk'
-}
-
-function PreviewFile({ mime }: { mime?: string }) {
-    /*здесь ести в компонениты не пихай куски свг*/
-    // return <>
-    //     <Image src='/images/filemamager/folder2.svg' width={140} height={140}  />
-    // </>
-
-
-
-    return <div className={styles.fileIconWrapper} >
-        <span>{mime ? (mime2ext[mime] ?? mime2ext['*'] ?? mime) : '.hz'}</span>
-        <svg className={styles.fileIcon} height="24" viewBox="0 0 24 24" version="1.1" width="24">
-            <g transform="translate(0 -1028.4)">
-                <path d="m5 1030.4c-1.1046 0-2 0.9-2 2v8 4 6c0 1.1 0.8954 2 2 2h14c1.105 0 2-0.9 2-2v-6-4-4l-6-6h-10z" fill="#95a5a6" />
-                <path d="m5 1029.4c-1.1046 0-2 0.9-2 2v8 4 6c0 1.1 0.8954 2 2 2h14c1.105 0 2-0.9 2-2v-6-4-4l-6-6h-10z" fill="#bdc3c7" />
-                <path d="m21 1035.4-6-6v4c0 1.1 0.895 2 2 2h4z" fill="#95a5a6" />
-            </g>
-        </svg>
-    </div>
 }
 
 function HierarchyFile(props: IRecordProps) {
@@ -169,13 +131,69 @@ interface IUseFolfer {
     rename(oldName: string, newName: string): void
 }
 
+function PreviewDir() {
+    /*здесь ести в компонениты не пихай куски свг*/
+    // return <>
+    //     <Image src='/images/filemamager/folder2.svg' width={140} height={140}  />
+    // </>
+    return <>
+        <svg className={styles.folderIcon} viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 8h-12c-2.21 0-3.98 1.79-3.98 4l-.02 24c0 2.21 1.79 4 4 4h32c2.21 0 4-1.79 4-4v-20c0-2.21-1.79-4-4-4h-16l-4-4z" />
+            <path d="M0 0h48v48h-48z" fill="none" />
+        </svg>
+    </>
+}
+
+const mime2ext = {
+    'image/jpeg': '.jpeg',
+    'text/javascript': '.js',
+    // 'application/octet-stream': '.bin',
+    '*': '.unk'
+}
+
+function PreviewFile(props: IRecordProps) {
+    /*здесь ести в компонениты не пихай куски свг*/
+    // return <>
+    //     <Image src='/images/filemamager/folder2.svg' width={140} height={140}  />
+    // </>
+    const { rec: { mime, token } } = props
+    const url = getUrlFromToken(token)
+
+    if(mime){
+        const [ family ] = mime.split('/')
+        if (family == 'image') {
+            return <img className={styles.thumbnail} src={url} alt={mime} />
+        }
+    }
+
+    return <div className={styles.fileIconWrapper} >
+        <span>{mime ? (mime2ext[mime] ?? mime2ext['*'] ?? mime) : '???'}</span>
+        <svg className={styles.fileIcon} viewBox="0 0 24 24" version="1.1">
+            <g transform="translate(0 -1028.4)">
+                <path d="m5 1030.4c-1.1046 0-2 0.9-2 2v8 4 6c0 1.1 0.8954 2 2 2h14c1.105 0 2-0.9 2-2v-6-4-4l-6-6h-10z" fill="#95a5a6" />
+                <path d="m5 1029.4c-1.1046 0-2 0.9-2 2v8 4 6c0 1.1 0.8954 2 2 2h14c1.105 0 2-0.9 2-2v-6-4-4l-6-6h-10z" fill="#bdc3c7" />
+                <path d="m21 1035.4-6-6v4c0 1.1 0.895 2 2 2h4z" fill="#95a5a6" />
+            </g>
+        </svg>
+    </div>
+}
+
+function NoPreview(){
+    return <>
+        No preview
+    </>
+}
+
+const getUrlFromToken = (token: string) =>
+    `${statics.host.api}/api/v1/vfiles/${token}`
+
 function RecordView(props: IRecordProps) {
     const { rec: file, path } = props
     const { name, type, mime, token } = file
     const manager = useFileManager()
 
+    const url = getUrlFromToken(token)
     const rel = file_path(path, file)
-    const url = `${statics.host.api}/api/v1/vfiles/${token}`
 
     function onDoubleClick(event: MouseEvent<HTMLDivElement>) {
         if (type == 'dir') {
@@ -190,22 +208,26 @@ function RecordView(props: IRecordProps) {
         return
     }
 
+    function Preview(props: IRecordProps) {
+        const { rec: { type } } = props
 
-
-    function getPreview({ type, mime }: any) {
-        if (type == 'dir')
-            return <PreviewDir />
-
-        const s_mime = mime ? mime.split('/') : ['*', '*']
-        if (type == 'file') {
-            if (s_mime[0] == 'image') return <img src={url} width={140} height={140} alt={mime} />
+        if (type == 'dir'){
+            return <div className={styles.thumbnail}>
+                <PreviewDir />
+            </div>
         }
-        // <><div>{s_mime[0]}</div><div>{s_mime[1]}</div></>
-        const preview = mime ? <PreviewFile mime={mime} /> : 'No preview'
-        return <div>{preview}</div>
+
+        if (type == 'file'){
+            return <div className={styles.thumbnail}>
+                <PreviewFile {...props}/>
+            </div>
+        }
+
+        return <div className={styles.thumbnail}>
+            <NoPreview/>
+        </div>
     }
 
-    const preview = getPreview({ type, mime })
     const ext_idx = name.lastIndexOf('.')
     const [ext, base] = ext_idx == -1 ? [null, name] : [name.substring(ext_idx), name.substring(0, ext_idx)]
 
@@ -241,14 +263,13 @@ function RecordView(props: IRecordProps) {
         setEditMode(!editMode)
     }
 
-
     const name_part = editMode ? <>
         <>
             <input className={styles.inputRename} onKeyDown={onKeyDownValue} defaultValue={name} type="text" autoFocus />
             <div onClick={() =>setEditMode(false) } className={styles.renameBg}></div>
         </>
     </> : <>
-        <span className={styles.name} onDoubleClick={onDoubleClickBase}>
+        <span className={cl(styles.name, styles.filename)} onDoubleClick={onDoubleClickBase}>
             <span className={styles.base}>{base}</span>
             <span className={styles.ext}>{ext}</span>
         </span>
@@ -260,7 +281,9 @@ function RecordView(props: IRecordProps) {
         title={url}
         onContextMenu={manager.useMenu(RecordViewContextMenu, { name, type, mime, path: url, token, ren: () => setEditMode(true) })}
     >
-        <div className={styles.preview}>{preview}</div>
+        <div className={cl(styles.preview, styles.thumbnail)}>
+            <Preview {...props}/>
+        </div>
         <>{name_part}</>
     </div>
 }
@@ -425,7 +448,7 @@ export function Uploader(props: IUploaderProps) {
     const [upload_list, setUploadList] = useState<FileList | null>(null)
 
     async function sendFiles(files: FileList) {
-        const r_files = await uploadFiles(`${statics.host.api}/api/v1/vfiles${manager.path}`, files, 'files')
+        const r_files = await uploadFiles(`${statics.host.api}/api/v1/vfiles/upload${manager.path}`, files, 'files')
         const path = manager.path
         manager.setPath('/')
         manager.setPath(path)
@@ -608,8 +631,10 @@ function ContentView(props: IFolderView) {
     const { list } = folder
 
     return <>
-        <div className={styles.content} onContextMenu={manager.useMenu(ContentViewContextMenu, {})}>
-            {list.map((file) => <RecordView key={file.path} rec={file} path={path} />)}
+        <div className={styles.contentwrapper}>
+            <div className={styles.content} onContextMenu={manager.useMenu(ContentViewContextMenu, {})}>
+                {list.map((file) => <RecordView key={file.path} rec={file} path={path} />)}
+            </div>
         </div>
     </>
 }
@@ -653,22 +678,59 @@ export function FileManager(props: IFileManagerProps) {
     return <>
         <FileManagerContext.Provider value={manager}>
             <div ref={ref} className={styles.wrapper} onClick={onClick}>
-                <p className={styles.title}>File manager</p>
+                {/* <p className={styles.title}>File manager</p> */}
                 <header className={styles.header}>
                     <Buttons className={styles.buttons}>
                         <ParentFolder /> {/*<NewFolder/>*/}
                     </Buttons>
                     <FilePath />
                 </header>
-                <main className={styles.main}>
-                    <Hierarchy path='/' />
-                    <ContentView folder={folder} path={path} />
-                </main>
-                <footer className={styles.footer}><Uploader /><span>{status}</span></footer>
+                <div className={styles.mainwrapper}>
+                    <main className={styles.main}>
+                        <Hierarchy path='/' />
+                        <ContentView folder={folder} path={path} />
+                    </main>
+                </div>
+                <footer className={styles.footer}>
+                    <Uploader />
+                    <span>{status}</span>
+                </footer>
             </div>
             <Modal {...contextMenu} />
         </FileManagerContext.Provider>
     </>
+}
+
+interface IFilemanagerToggleButtonProps{
+    className?: string
+}
+
+export const FileManagerToggleButton = (props: IFilemanagerToggleButtonProps) => { 
+    const windows = useWindows()
+    const [ isOpen, setOpened ] = useState(false);
+
+    const onClick: MouseEventHandler = (event) => { 
+        event.preventDefault()
+        event.stopPropagation()
+
+        if(!isOpen){
+            setOpened(true)
+            windows.open(<FileManager/>, {
+                title: 'File manager',
+                x: event.clientX,
+                y: event.clientY,
+                h: 400, 
+                w: 700,
+                onClose: () => setOpened(false)
+            })
+        }
+
+        return
+    }
+
+    return <>
+        <Button className={cl(styles.toggle_button, props.className)} onClick={onClick}>File manager</Button>
+    </> 
 }
 
 async function OnClickClipboard(event: MouseEvent, cb: () => string) {

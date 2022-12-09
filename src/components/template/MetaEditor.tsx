@@ -454,11 +454,8 @@ export function setValueByPath(root: object, path: string, value: any){
 
 export function MetaEditor(props: IMetaEditorProps) {
 	const { scheme, onChange, meta } = props
-	const title = 'Metadata Editor'
 	return <>
 		<div className={styles['meta-editor']}>
-			{title && <span className={styles['editor-title']}>{title}</span>}
-		
 			<EditorObject 
 				root={{
 					getValue: (path) => getValueByPath(meta, path),

@@ -11,6 +11,9 @@ import PagesList from './resources/page/List'
 import { G_StorageContrext, IGStorageData, initStorage } from "src/contexts/storage";
 import { useEffect, useState } from "react";
 
+import styles from "./styles.module.scss"
+export {styles}
+
 export function AdminPanel(){  
     const [storage, setStorage] = useState<IGStorageData>(null as any)
     const isLoading = storage == null

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { HttpMethod, JSTypes } from "./types";
+import { number } from "react-admin";
+import { HttpMethod, JSType } from "./types";
 
 export function getCookie(name: string): string {
     const { cookie } = document
@@ -63,54 +64,91 @@ export async function fetchJSON<ResponseType=any, BodyType=any>(method: HttpMeth
     })
     return await res.json()
 }
+
+type IFetchEntry = [HttpMethod, RequestInfo | URL]
+
+
+interface IFetchState<ResponseType=any>{
+    data?: ResponseType,
+    status: number,
+    isLoading: boolean,
+    error?: any
+}
+
+interface IFetchResponse<ResponseType=any>{
+    data?: ResponseType,
+    status: number,
+    error?: any
+}
   
 export function useJSONFetch<ResponseType=any, BodyType=any>(method: HttpMethod, input: RequestInfo | URL, body?: BodyType){
-    const [ data, setData ] = useState<ResponseType | undefined>(undefined)
-    const [ req, setReq ] = useState<typeof body>(body)
-    const [ status, setStatus ] = useState(0)
-    const [ error, setError ] = useState<any>(null)
-    const [ isLoading, setIsLoading ] = useState<boolean>(false)
+    //const [ entry, setEntry ] = useState<IFetchEntry>([http_method, url])
+    const [ state, setFetchState ] = useState<IFetchState<ResponseType>>({ status: 0, isLoading: false })
+    const { data, status, isLoading, error } = state
+    //const [ method, input ] = entry
 
-    const _refetch = () => { 
-        if(req !== undefined){
-            setIsLoading(true)
-            _async(req)
-        } 
-    }
+    //const _method = (method: HttpMethod, input: RequestInfo) => setEntry([ method, input ])
 
-    const _refetch_t = (ms: number = 2000) => () => {
-        if(req !== undefined){
-            setIsLoading(true)
-            setTimeout(() => _async(req), ms)
-        }
-    }
+    const _fetch = async (body?: BodyType): Promise<IFetchResponse<ResponseType>> => {
+        if(body === undefined) 
+            return { status: 0, data, error }
 
-    useEffect(_refetch, [req])
-
-    const _async = async (body: BodyType) => {
         try{
+            setFetchState({ status: 0, isLoading: true })
+
             const response = await fetch(input, {
                 method, 
                 headers: Header_Auth_JSON(), 
                 body: body ? JSON.stringify(body) : undefined
             })
 
-            const json = await response.json()
+            let json
+            try{
+                json = await response.json()
+            }
+            catch(error){
+                json = undefined
+            }
+            setFetchState({ status: response.status, data: json, isLoading: false })
+            return { status: response.status, data: json }
+        }
 
-            setStatus(response.status)
-            setData(json)
-            setError(null)
-        }
         catch(error){
-            setStatus(500)
-            setData(undefined)
-            setError(error)
+            setFetchState({ status: 0, isLoading: false, error })
+            return { status: 0, error }
         }
-        setIsLoading(false)
     }
 
-    return { req, fetch: (_: BodyType) => setReq({..._}), data, setData, status, setStatus, error, setError, isLoading }
+    useEffect(() => { _fetch(body) }, [])
+
+    return { fetch: _fetch, data, error, status, isLoading, setFetchState, /*entry, method: _method*/ }
 }
+
+export interface IFetchProvider<Type=any>{
+    get(id: number): Promise<Type>,
+    edit(data: Type): Promise<Type>
+    list(): Promise<Type>
+    delete(id: number): Promise<Type>
+}
+
+export class FetchProvider implements IFetchProvider{
+    async get(id: number): Promise<any> {
+        throw new Error("Get method not implemented.");
+    }
+    async edit(data: any): Promise<any> {
+        throw new Error("Edit method not implemented.");
+    }
+    async list(): Promise<any> {
+        throw new Error("List method not implemented.");
+    }
+    async delete(id: number): Promise<any> {
+        throw new Error("Delete method not implemented.");
+    }
+}
+
+export const useFetchProvider = (provider: IFetchProvider) => {
+
+} 
 
 export function findByKey<T>(array_of: T[], key: keyof T, value: any){
     return array_of.find((item: T) => (item[key] === value))

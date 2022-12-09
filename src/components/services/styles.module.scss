@@ -1,5 +1,5 @@
-.root{
-    font-family: "BlinkMacSystemFont","Segoe UI","Roboto","Helvetica Neue","Arial","Noto Sans","sans-serif","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+.root {
+    font-family: "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "sans-serif", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-variant: tabular-nums;
     font-feature-settings: "tnum";
     font-size: 14px;
@@ -9,30 +9,33 @@
     --topbar-hover-color: #1890ff;
 
     --bottombar-color: #3a3f44;
-    --bottombar-hover-color: #1890ff;;
+    --bottombar-hover-color: #1890ff;
+    ;
 
     --lbar-color: rgb(78, 78, 92);
-    --cbody-color: #f0f2f5;;
-    --cmain-color: #f0f2f5;;
+    --cbody-color: #f0f2f5;
+    ;
+    --cmain-color: #f0f2f5;
+    ;
 
     display: flex;
     height: 100%;
     flex-direction: column;
 }
 
-.topbar{
+.topbar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
 
-    > .left{
+    >.left {
         display: flex;
         flex-direction: row;
         align-items: center;
     }
 
-    > .right {
+    >.right {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -45,19 +48,19 @@
     //line-height: 64px;
 }
 
-.bottombar{
+.bottombar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
 
-    > .left{
+    >.left {
         display: flex;
         flex-direction: row;
         align-items: center;
     }
 
-    > .right {
+    >.right {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -69,11 +72,11 @@
     padding: 10px 50px;
 }
 
-.svc_header{
+.svc_header {
     padding: 16px 24px;
 }
 
-.svc_name{
+.svc_name {
     margin: 0;
     color: #000000d9;
     font-weight: 600;
@@ -85,39 +88,31 @@
     //padding: 16px 24px;
 }
 
-.logout_btn{
-    padding: 2px 10px;
-    border-radius: 5px;
-    border: 1px solid white;
-    color: white;
-    height: fit-content;
-    cursor: pointer;
-}
-
-.svc_navlink{
+.svc_navlink {
     color: white;
     padding: 10px 20px;
     transition: 0.2s;
 
     cursor: pointer;
 
-    &:hover, &.active{
+    &:hover,
+    &.active {
         background-color: var(--topbar-hover-color);
         transition: 0.2s;
     }
 }
 
-.lbar{
+.lbar {
     width: 80px;
     background-color: var(--lbar-color);
 }
 
-.main{
+.main {
     background-color: var(--cmain-color);
     flex-grow: 1;
 }
 
-.body{
+.body {
     display: flex;
     flex-grow: 1;
     flex-direction: row;
@@ -125,9 +120,9 @@
 }
 
 
-.table{
+.table {
     --border: 1px solid rgb(211, 211, 211);
-    --cell-padding: 5px 20px; 
+    --cell-padding: 5px 20px;
     --cell-hover-color: #f0f0f0d9;
 
     background-color: #fff;
@@ -139,31 +134,146 @@
     border-top: var(--border);
     border-left: var(--border);
 
-    > thead {
-        > tr{
-            > th{
+    >thead {
+        >tr {
+            >th {
                 padding: var(--cell-padding);
                 border-bottom: var(--border);
                 border-right: var(--border);
 
-                &:hover{
+                &:hover {
                     background-color: var(--cell-hover-color);
                 }
             }
         }
     }
 
-    > tbody {
-        > tr{
-            > td{
+    >tbody {
+        >tr {
+            >td {
                 padding: var(--cell-padding);
                 border-bottom: var(--border);
                 border-right: var(--border);
             }
 
-            &:hover{
+            &:hover {
                 background-color: var(--cell-hover-color);
             }
+        }
+    }
+}
+
+.loading {
+    display: inline;
+    content: 'LOADING'
+}
+
+.svc_menu {
+    padding: 30px;
+}
+
+.button_logout {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid white;
+    color: white;
+    height: fit-content;
+    cursor: pointer;
+}
+
+.button_edit {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+    color: rgb(0, 0, 0);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.button_delete {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(82, 13, 13);
+    color: rgb(82, 13, 13);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.button_save {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 27, 87);
+    color: rgb(0, 27, 87);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.button_cancel {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+    color: rgb(0, 0, 0);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.yes_button {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+    color: rgb(0, 0, 0);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.no_button {
+    padding: 2px 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(0, 0, 0);
+    color: rgb(0, 0, 0);
+    height: fit-content;
+    cursor: pointer;
+}
+
+.buttons {
+    padding: 5px 0;
+    width: fit-content;
+}
+
+.asc_yesno {
+    background-color: white;
+    border-radius: 20px;
+
+    padding: 15px;
+    display: flex;
+
+    gap: 20px;
+
+    flex-direction: column;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 120%;
+}
+
+
+.fields {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    width: fit-content;
+
+    >* {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+
+        >.title {
+            display: inline-block;
+        }
+
+        >.input {
+            display: inline-block;
         }
     }
 }

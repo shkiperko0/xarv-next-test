@@ -5,7 +5,6 @@ export default function(props: any){
 	return <>
 		<Edit title="Edit post">
 			<SimpleForm defaultValues={{ caption: 'Post title', text: 'Sample text', meta: {}, template: 'post',}} toolbar={<EditToolbar/>}>
-				<TextInput disabled source="id" />
 				<FormDataConsumer>{ fd => <PostCommonEditor data={fd.formData} /> }</FormDataConsumer>
 			</SimpleForm>
 		</Edit>

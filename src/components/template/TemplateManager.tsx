@@ -10,12 +10,12 @@ interface ISchemeList{
 } 
 
 const _templateList: ITemplateList = {
-    ['default']: () => <>Default Template</>
-    // ['post']: Article,
-    // ['welcome']: Welcome,
-    // ['post-preview']: PostPreview,
-    // ['test']: Test,
-    // ['multi-post']: MultiPost,
+    ['default']: () => <></>,
+    ['post']: () => <></>,
+    ['welcome']: () => <></>,
+    ['post-preview']: () => <></>,
+    ['test']: () => <></>,
+    ['multi-post']: () => <></>,
 }
 
 const _schameList: ISchemeList = {

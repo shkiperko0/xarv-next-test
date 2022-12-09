@@ -10,8 +10,10 @@
     --border: none; /* 1px solid black; */
     --box-shadow: 0px 0px 5px black;
 
-
-    --z-header: 10;
+    --z-header: 2000;
+    --z-bg: 3000;
+    --z-dropdown: 4000;
+    --z--windows: 5000;
 }
 
 html {

@@ -6,3 +6,44 @@
     right: 0;
     padding: 100px 0;
 }
+
+.text, .caption{
+    width: 100%;
+}
+
+.line_1{
+    width: 50%;
+}
+
+.line_2{
+    width: 100%;
+
+    > * {
+        display: flex;
+        width: 100%;
+    }
+
+    .text {
+        display: flex;
+        align-items: flex-start;
+    }
+}
+
+.line_3{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.filemanager{
+    height: fit-content;
+    padding: 10px;
+}
+
+.refresh{
+    cursor: pointer;
+    border: 1px solid black;
+    height: fit-content;
+    padding: 10px;
+    border-radius: 5px;
+}

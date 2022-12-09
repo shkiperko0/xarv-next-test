@@ -10,7 +10,7 @@ interface IRole{
 
 
 export function RolesMenu(props: IServiceMenuProps){
-    const hook = useJSONFetch<IRole[], null>('GET', statics.host.api + '/api/v1/policy/roles/list', null)
+    const hook = useJSONFetch<IRole[], null>('GET', statics.host.api + props.data.apiListEntry, null)
     return <>
         <ServiceMenu data={props.data}/>
         <DefaultArrayFetcher svc={props.data} hook={hook}/>  

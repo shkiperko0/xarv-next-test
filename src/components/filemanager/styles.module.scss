@@ -4,7 +4,16 @@
     display: flex;
     flex-direction: column;
 
+    ul{
+        margin: 0;
+    }
+
+    li{
+        list-style: none;
+    }
+
     width: 100%;
+    height: 100%;
 
     --border-color: rgb(214, 214, 214);
 
@@ -13,8 +22,9 @@
     border: 1px solid var(--border-color);
     overflow: hidden;
 
-    font-family: "Roboto","Helvetica","Arial",sans-serif;
+    background-color: #fff;
 
+    font-family: "Roboto","Helvetica","Arial",sans-serif;
 }
 
 
@@ -28,16 +38,25 @@
     padding: 5px 0 ;
 }
 
+.mainwrapper{
+    height: calc(100% - 90px);
+}
+.main{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
 
 /* хэдер часть где путь и кнопки */
 .header{
     display: flex;
     flex-direction: row;
     gap: 5px;
-
+    
     background-color: beige;
     padding: 5px;
-
+    height: 45px;
+    
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
 }
@@ -47,16 +66,18 @@
 .footer{
     display: flex;
     flex-direction: row;
+    gap: 5px;
+
     background-color: beige;
     padding: 5px;
-    gap: 10px;
-    align-items: center;
+    height: 45px;
+
     border-top: 1px solid var(--border-color);
 }
 
 .folderIcon {
-    height: 140px;
-    width: 140px;
+    height: 100%;
+    width: 100%;
 
     > path:first-of-type{
         fill: rgb(82, 82, 82)
@@ -64,8 +85,8 @@
 }
 
 .fileIcon {
-    height: 140px;
-    width: 140px;
+    height: 100%;
+    width: 100%;
 
     &Wrapper{
         position: relative;
@@ -86,32 +107,31 @@
 }
 
 
-/* центральная часть включает в себя контент и иерархию */
-.main{
-    display: flex;
-    flex-direction: row;
-    //flex: 1;
+.contentwrapper{
+    height: 100%;
     width: 100%;
-    height: 500px;
-
-    > *{
-        padding: 5px;
-    }
-
-    > .hierarchy{
-        width: 15%;
-        border-right: 1px solid var(--border-color);
-        height: 500px;
-
-        user-select: none;
-        cursor: pointer;
-    }
-
-    > .content{
-        width: 85%;
-        height: 500px;
-    }
 }
+
+.content{
+    height: 100%;
+    padding: 5px;
+    overflow-y: scroll;
+}
+
+.hierarchy{
+    border-right: 1px solid var(--border-color);
+    height: 100%;
+
+    user-select: none;
+    cursor: pointer;
+    padding: 5px;
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+
 
 /* запись в иерархии */
 .hierarchyLI{
@@ -193,9 +213,21 @@
 }
 
 
+.thumbnail{
+    width: 100px;
+    height: 100px;
+}
 
+.filename{
+    width: 100px;
+}
 
-    
+.inputRename{
+    position: relative;
+    width: 100px;
+    z-index: 100;
+}
+
 
 /* контентная часть с папкми и пре*/
 .content{
@@ -203,18 +235,18 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 15px;
+    gap: 10px;
 
+    width: auto;
     overflow-y: scroll;
     
     .record{
         display: flex;
         flex-direction: column;
-        padding: 5px;
-        gap: 5px;
+        padding: 10px;
+        gap: 10px;
 
         height: fit-content;
-        width: 150px;
 
         .base{
             text-overflow: ellipsis;
@@ -231,17 +263,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-
-            width: 100%;
         }
 
         > .preview{
             display: flex;
             align-items: center;
             justify-content: center;
-
-            width: 140px;
-            height: 140px;
             // border: 1px solid rgba(255, 0, 0, 0.212);
         }
 
@@ -288,6 +315,8 @@
     display: flex;
     flex-direction: column;
 
+    margin: 0;
+
     border: 1px solid black;
     border-radius: 5px;
 
@@ -295,6 +324,8 @@
     width: max-content;
 
     > li {
+        list-style: none;
+
         padding: 5px;
         width: 100%;
 
@@ -305,13 +336,6 @@
     }
 }
 
-// Переименование файлов
-.inputRename{
-    position: relative;
-    max-width: 100%;
-    z-index: 100;
-}
-
 // fake bg для закрытия инпута rename
 .renameBg{
     position: absolute;
@@ -320,4 +344,10 @@
     z-index: 10;
     width: 100vw;
     height: 100vh;
+}
+
+.toggle_button{
+    border-radius: 5px;
+    border: 1px solid black;
+    cursor: pointer;
 }

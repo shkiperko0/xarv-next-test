@@ -6,6 +6,6 @@ interface IButtonsProps{
     children?: React.ReactNode
 }
 
-export default function Buttons(props: IButtonsProps){
+export function Buttons(props: IButtonsProps){
     return <div className={cl(styles.buttons, props.className)}>{props.children}</div>
 }

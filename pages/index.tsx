@@ -8,7 +8,7 @@ import { AdminPanel } from 'src/components/admin'
 export default () => {
 	return <>
 		<Head>
-			<title>Админка</title>
+			<title>Admin</title>
 		</Head>
 		<AdminPanel/>
 	</>

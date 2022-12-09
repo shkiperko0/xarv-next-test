@@ -1,14 +1,16 @@
-import { useState, MouseEvent, useMemo } from "react";
+import { useState, MouseEvent, useMemo, MouseEventHandler, useRef } from "react";
 import { SelectInput, TextInput, useInput, useNotify, SaveButton, Toolbar, useRecordContext } from 'react-admin';
 import { RichTextInput, RichTextInputToolbar } from 'ra-input-rich-text';
-import styles from 'src/components/admin/styles.module.scss'
 import { useEditContext, useCreateContext, useUpdate, useCreate, useRedirect } from 'react-admin';
 import { useFormContext } from 'react-hook-form';
 import { IPostData, IPostMeta } from "@components/template/types";
 import { TemplateManager, GetTemplateSchema, GetTemplates } from "@components/template/TemplateManager";
 import { GetKeyDefaultValue, MetaEditor, NormalizeMeta } from "@components/template/MetaEditor";
-import { FileManager } from "@components/filemanager";
+import { FileManagerToggleButton } from "@components/filemanager";
 import { useGStorage } from "src/contexts/storage";
+import { styles } from '..'
+import { Button } from "@components/gui/Button";
+import { AnyJSON_toBase64 } from "src/tools";
 
 export function PostCategoryField(props: { source: string }){
 	const record = useRecordContext<IPostData>();
@@ -86,9 +88,9 @@ export function CreateToolbar(){
 }
 
 
-const MetaField = (props: { source: string, field: any }) => {
-	return <TextInput
-		style={{'display': 'none'}}
+const MetaField = (props: { source: string, field: any, meta: any, template: string }) => {
+	return <><TextInput
+		//style={{'display': 'none'}}
 		type={''}
 		source={props.source}
 		{ ...props.field }
@@ -96,6 +98,8 @@ const MetaField = (props: { source: string, field: any }) => {
 		format={value => { try { return JSON.stringify(value) } catch (error) { return '#ERROR' } }}
 		parse={value => { try { return JSON.parse(value) } catch (error) { return '#ERROR' } }}
 	/>
+		<MetaEditor meta={props.meta} scheme={GetTemplateSchema(props.template)} onChange={() => {}}/>
+	</>
 }
 
 const choises_status = [
@@ -133,7 +137,11 @@ function TemplateEditor(props: ITemplateEditor){
 	</>
 }
 
+const getPostUrl = (data: string) => 
+	`http://192.168.0.238:3000/test/articles/${data}`
+
 export function PostCommonEditor(props: { data: IPostData }) {
+	const iframe = useRef<HTMLIFrameElement>(null)
 	const { storage } = useGStorage()
 	const cats = storage.content.categories
 	const GetCategories = () => cats.map((item) => ({ id: item.id, name: item.title }))
@@ -163,32 +171,50 @@ export function PostCommonEditor(props: { data: IPostData }) {
 		field.onChange(meta)
 	}
 
+	const onResresh: MouseEventHandler = () => {
+		const { current } = iframe
+		if(current){
+			current.src = getPostUrl(AnyJSON_toBase64(post))
+		}
+		return
+	}
+
+
 	const { field: { name, onBlur, onChange, value } } = useInput({ source: 'meta' })
 	const field = { name, onBlur, onChange, value }
 	
 	return <>
-		<FileManager/>
-		<TextInput source="caption" />
-		<SelectInput source="status" choices={choises_status} optionValue="value" accessKey=""/>
-		<SelectInput source="category_id" choices={choises_cat} optionValue="id"  />
-		<TextInput source="image_url" />
-		<RichTextInput source="text" toolbar={<RichTextInputToolbar size="large" />} />
-		<SelectInput source="template"
-			choices={choises_templ}
-			optionValue="name" 
-			onChange={OnApplyTemplate} 
-			defaultValue='post' 
-			emptyValue='post'
-			emptyText={'default (post)'} 
-		/>
-		<MetaField source="meta" field={field}/>
+		<div className={styles.line_1}>
+			<TextInput className={styles.caption} source="caption" />
+		</div>
+		<div className={styles.line_2}>
+			<RichTextInput className={styles.text} source="text" toolbar={<RichTextInputToolbar  size="large" />} />
+		</div>
+		<div className={styles.line_3}>
+			<SelectInput source="category_id" choices={choises_cat} optionValue="id"  />
+			<SelectInput source="template"
+				choices={choises_templ}
+				optionValue="name" 
+				onChange={OnApplyTemplate} 
+				defaultValue='post' 
+				emptyValue='post'
+				emptyText={'default (post)'} 
+			/>
+			<SelectInput source="status" choices={choises_status} optionValue="value" accessKey=""/>
+			<TextInput source="image_url" />
+			<FileManagerToggleButton className={styles.filemanager}/>
+			<Button className={styles.refresh} onClick={onResresh}>Refresh</Button>
+		</div>
+		<MetaField source="meta" field={field} meta={post.meta} template={post.template}/>
 		<TemplateEditor onChangeMeta={OnApplyMeta} post={post} />
+		<iframe ref={iframe} src={getPostUrl(AnyJSON_toBase64(post))} style={{ width: '100%', minHeight: '1000px' }} />
 	</>
 }
 
 export function PostPageEditor(props: { data: IPostData }) {
 	
 	const choises_templ = GetTemplates()
+	const iframe = useRef()
 	
 	const { data: post } =  props
 	const [ template, setTemplate ] = useState(post.template)
@@ -210,24 +236,35 @@ export function PostPageEditor(props: { data: IPostData }) {
 		field.onChange(meta)
 	}
 
+	const onResresh: MouseEventHandler = () => {
+
+	}
+
 	const { field: { name, onBlur, onChange, value } } = useInput({ source: 'meta' })
 	const field = { name, onBlur, onChange, value }
 
 	return <>
-		<FileManager/>
-		<TextInput source="caption" />
-		<SelectInput source="status" choices={choises_status} optionValue="value" />
-		<TextInput source="image_url" />
-		<RichTextInput source="text" toolbar={<RichTextInputToolbar size="large" />} />
-		<SelectInput source="template"
-			choices={choises_templ}
-			optionValue="name" 
-			onChange={OnApplyTemplate} 
-			defaultValue='post' 
-			emptyValue='post'
-			emptyText={'default (post)'} 
-		/>
-		<MetaField source="meta" field={field}/>
+		<div className={styles.line_1}>
+			<TextInput className={styles.caption} source="caption" />
+		</div>
+		<div className={styles.line_2}>
+			<RichTextInput className={styles.text} source="text" toolbar={<RichTextInputToolbar  size="large" />} />
+		</div>
+		<div className={styles.line_3}> 
+			<SelectInput source="template"
+				choices={choises_templ}
+				optionValue="name" 
+				onChange={OnApplyTemplate} 
+				defaultValue='post' 
+				emptyValue='post'
+				emptyText={'default (post)'} 
+			/>
+			<SelectInput source="status" choices={choises_status} optionValue="value" accessKey=""/>
+			<TextInput source="image_url" />
+			<FileManagerToggleButton className={styles.filemanager}/>
+			<Button className={styles.refresh} onClick={onResresh}>Refresh</Button>
+		</div>
+		<MetaField source="meta" field={field} meta={post.meta} template={post.template}/>
 		<TemplateEditor onChangeMeta={OnApplyMeta} post={data} />
 	</>
 }
