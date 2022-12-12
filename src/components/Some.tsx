@@ -1,6 +1,6 @@
 import statics from "../statics";
 import utils from '../utils'
-import Button from "./gui/Button";
+import { Button } from "./gui/Button";
 
 export const Nya = () => <img src={`${statics.host.main}/images/fire.gif`} alt="Nya"/>
 
@@ -23,7 +23,7 @@ export function TempUpload(props: IUploadProps){
 		}
 	>
 		<input type="file" name="files" multiple/>
-		<Button submit> submit </Button>
+		<Button> submit </Button>
 	</form>
 }
 
