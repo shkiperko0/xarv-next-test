@@ -7,7 +7,6 @@
 
 .windowheader{
     padding: 10px;
-    height: 40px;
     background-color: rgb(67, 63, 71);
 }
 
@@ -16,7 +15,7 @@
 }
 
 .windowcontent{
-    height: calc(100% - 40px);
+    height: 100%;
 }
 
 .windows{
@@ -27,4 +26,25 @@
 
     z-index: var(--z--windows);
     overflow: hidden;
+}
+
+.window{     
+    background-color: white;
+    box-shadow: 0 0 10px -1px black;
+}
+
+.window:hover{     
+    box-shadow: 0 0 5px 2px red;
+}
+
+.close_button{
+    margin: 2px;
+    padding: 10px;
+    border-radius: 50%;
+    background-color: rgb(219, 0, 0);
+    box-shadow: 0 0 5px 0px black;
+}
+
+.close_button:hover{
+    outline: 1px solid white;
 }

@@ -11,6 +11,9 @@ import { useGStorage } from "src/contexts/storage";
 import { styles } from '..'
 import { Button } from "@components/gui/Button";
 import { AnyJSON_toBase64 } from "src/tools";
+import statics from "src/statics";
+
+const getPostUrl = (data: string) => `${statics.host.eam}/test/articles/${data}`
 
 export function PostCategoryField(props: { source: string }){
 	const record = useRecordContext<IPostData>();
@@ -89,6 +92,7 @@ export function CreateToolbar(){
 
 
 const MetaField = (props: { source: string, field: any, meta: any, template: string }) => {
+	const scheme = GetTemplateSchema(props.template)
 	return <><TextInput
 		//style={{'display': 'none'}}
 		type={''}
@@ -98,7 +102,7 @@ const MetaField = (props: { source: string, field: any, meta: any, template: str
 		format={value => { try { return JSON.stringify(value) } catch (error) { return '#ERROR' } }}
 		parse={value => { try { return JSON.parse(value) } catch (error) { return '#ERROR' } }}
 	/>
-		<MetaEditor meta={props.meta} scheme={GetTemplateSchema(props.template)} onChange={() => {}}/>
+		<MetaEditor meta={ NormalizeMeta(props.meta, { type: 'object', scheme }) } scheme={scheme} onChange={() => {}}/>
 	</>
 }
 
@@ -137,9 +141,6 @@ function TemplateEditor(props: ITemplateEditor){
 	</>
 }
 
-const getPostUrl = (data: string) => 
-	`http://192.168.0.238:3000/test/articles/${data}`
-
 export function PostCommonEditor(props: { data: IPostData }) {
 	const iframe = useRef<HTMLIFrameElement>(null)
 	const { storage } = useGStorage()
@@ -152,7 +153,7 @@ export function PostCommonEditor(props: { data: IPostData }) {
 	const { data: post } =  props
 	const [ template, setTemplate ] = useState(post.template)
 	const record = useRecordContext<IPostData>();
-	const meta = useMemo(() => ((record ? record.meta : post.meta) ?? {}), [record.meta, post.meta])
+	const meta = useMemo(() => ((record ? record.meta : post.meta) ?? {}), [record, post.meta])
 
 	const data: IPostData = {
 		...post,
@@ -174,7 +175,7 @@ export function PostCommonEditor(props: { data: IPostData }) {
 	const onResresh: MouseEventHandler = () => {
 		const { current } = iframe
 		if(current){
-			current.src = getPostUrl(AnyJSON_toBase64(post))
+			current.src = getPostUrl(AnyJSON_toBase64(data))
 		}
 		return
 	}
@@ -205,16 +206,16 @@ export function PostCommonEditor(props: { data: IPostData }) {
 			<FileManagerToggleButton className={styles.filemanager}/>
 			<Button className={styles.refresh} onClick={onResresh}>Refresh</Button>
 		</div>
-		<MetaField source="meta" field={field} meta={post.meta} template={post.template}/>
-		<TemplateEditor onChangeMeta={OnApplyMeta} post={post} />
-		<iframe ref={iframe} src={getPostUrl(AnyJSON_toBase64(post))} style={{ width: '100%', minHeight: '1000px' }} />
+		<MetaField source="meta" field={field} meta={data.meta} template={data.template}/>
+		<TemplateEditor onChangeMeta={OnApplyMeta} post={data} />
+		<iframe ref={iframe} style={{ width: '100%', minHeight: '1000px' }} />
 	</>
 }
 
 export function PostPageEditor(props: { data: IPostData }) {
+	const iframe = useRef<HTMLIFrameElement>(null)
 	
 	const choises_templ = GetTemplates()
-	const iframe = useRef()
 	
 	const { data: post } =  props
 	const [ template, setTemplate ] = useState(post.template)
@@ -237,7 +238,10 @@ export function PostPageEditor(props: { data: IPostData }) {
 	}
 
 	const onResresh: MouseEventHandler = () => {
-
+		const { current } = iframe
+		if(current){
+			current.src = getPostUrl(AnyJSON_toBase64(data))
+		}
 	}
 
 	const { field: { name, onBlur, onChange, value } } = useInput({ source: 'meta' })
@@ -264,7 +268,8 @@ export function PostPageEditor(props: { data: IPostData }) {
 			<FileManagerToggleButton className={styles.filemanager}/>
 			<Button className={styles.refresh} onClick={onResresh}>Refresh</Button>
 		</div>
-		<MetaField source="meta" field={field} meta={post.meta} template={post.template}/>
+		<MetaField source="meta" field={field} meta={data.meta} template={data.template}/>
 		<TemplateEditor onChangeMeta={OnApplyMeta} post={data} />
+		<iframe ref={iframe} style={{ width: '100%', minHeight: '1000px' }} />
 	</>
 }

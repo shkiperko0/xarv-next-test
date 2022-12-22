@@ -1,8 +1,7 @@
 import { IOptionData } from "@components/gui/Select"
 import statics from "src/statics"
-import { fetchJSON } from "src/tools"
+import { fetchJSON, callback, defaultField_BooleanSelect } from "src/tools"
 import { IFieldReflection } from "src/tools/types"
-import { callback, defaultField_BooleanSelect } from "src/utils"
 
 interface IRole{
     id: number,
@@ -30,6 +29,34 @@ async function GetRolesOptions(): Promise<IOptionData<string>[]> {
         const data = response as Array<IRole>
         return data.map(({id, name}) => ({
             id, title: name, value: name
+        }))
+    }
+
+    catch(error){
+        return []
+    }
+}
+
+async function GetItemsCategoriesOptions(): Promise<IOptionData<string>[]> {
+    try{
+        const response = await fetchJSON('GET', statics.host.api + '/api/v1/market/categories')
+        const data = response as Array<any>
+        return data.map(({id, title}) => ({
+            id, title, value: id
+        }))
+    }
+
+    catch(error){
+        return []
+    }
+}
+
+async function GetItemsManufacturersOptions(): Promise<IOptionData<string>[]> {
+    try{
+        const response = await fetchJSON('GET', statics.host.api + '/api/v1/market/manufactures')
+        const data = response as Array<any>
+        return data.map(({id, title}) => ({
+            id, title, value: id
         }))
     }
 
@@ -151,51 +178,124 @@ const users_fields: IFieldInput[] = [
     { title: 'Birth date', name: 'bdate', type: 'string' },
     { title: 'Role', name: 'role', type: 'string' },
 
-    { title: 'Verifed', name: 'verified', type: 'boolean' },
-    { title: 'Blocked', name: 'blocked', type: 'boolean' },
+    { 
+        title: 'Verifed', 
+        name: 'verified', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
+    { 
+        title: 'Blocked', 
+        name: 'blocked', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
     { title: 'Subscribes', name: 'subscribe', type: 'string' },
     { title: 'Ref', name: 'referral', type: 'string' },
     { title: 'Promo', name: 'promo', type: 'string' },
 ]
 
-export const svcs_item: {
-    [svc: string]: { fields: IFieldInput<any>[] }
-} = {
+const market_fields: IFieldInput[] = [
+    ID,
+    { title: 'Name', name: 'name', type: 'string' },
+    { 
+        title: 'Category', 
+        name: 'category_id', 
+        type: 'number', 
+        select: {
+            options: GetItemsCategoriesOptions
+        } 
+    },
+    { title: 'Description', name: 'description', type: 'string' },
+    { 
+        title: 'Enabled', 
+        name: 'enabled', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
+
+    { title: 'Image URL', name: 'image_url', type: 'string' },
+    { title: 'Price', name: 'price', type: 'object' },
+    { 
+        title: 'Manufacturer', 
+        name: 'manufacturer_id', 
+        type: 'number',
+        select: {
+            options: GetItemsManufacturersOptions
+        } 
+    },
+    { title: 'Title', name: 'title', type: 'string' },
+    { title: 'Time limit', name: 'timelimit', type: 'string' },
+    { 
+        title: 'Time limit check', 
+        name: 'timelimit_check', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
+]
+
+const pkg_fields: IFieldInput[] = [
+    ID,
+    { title: 'Name', name: 'name', type: 'string' },
+    { title: 'Title', name: 'title', type: 'string' },
+    { title: 'Items', name: 'items', type: 'object' },
+    { title: 'Price', name: 'price', type: 'object' },
+    { title: 'Description', name: 'description', type: 'string' },
+    { title: 'Image URL', name: 'image_url', type: 'string' },
+    { 
+        title: 'Enabled', 
+        name: 'enabled', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
+]
+
+const coins_fields: IFieldInput[] = [
+    ID,
+    { title: 'RDC', name: 'rdc', type: 'number' },
+    { title: 'Price', name: 'price', type: 'number' },
+    { 
+        title: 'Enabled', 
+        name: 'enabled', 
+        type: 'boolean',
+        select: defaultField_BooleanSelect
+    },
+    { title: 'Image URL', name: 'image_url', type: 'string' },
+]
+
+const market_manufacturers_fields: IFieldInput[] = [
+    ID,
+    //{ title: 'Name', name: 'name', type: 'string' },
+    { title: 'Title', name: 'title', type: 'string' },
+    //{ title: 'Parent', name: 'parent', type: 'string' },
+]
+
+const market_categories_fields: IFieldInput[] = [
+    ID,
+    { title: 'Name', name: 'name', type: 'string' },
+    { title: 'Title', name: 'title', type: 'string' },
+    { title: 'Parent', name: 'parent', type: 'string' },
+]
+
+export const svcs_item = {
     permissions: { fields: permission_fields },
     ms: { fields: ms_fields },
     roles: { fields: roles_fields },
     routes: { fields: routes_fields },
     users: { fields: users_fields },
+    market: { fields: market_fields },
+    pkg: { fields: pkg_fields },
+    coins: { fields: coins_fields },
+
+    
+    market_manufacturers: { fields: market_manufacturers_fields },
+    market_categories: { fields: market_categories_fields },
 }
 
+export const Models = Object.fromEntries(
+    Object.entries(svcs_item).map(
+        ([name, i]) => [name, i.fields]
+    )
+)
 
-// ID          uint           `json:"id" gorm:"primaryKey, autoIncrement"`
-// Name        string         `json:"name" gorm:"not null"`
-// Host        string         `json:"host" gorm:"index:idx_host,unique"`
-// AutoEntries bool           `json:"auto" gorm:"not null, default:false"`
-// Description string         `json:"description" gorm:"default:null"`
-// CreatedAt   time.Time      `json:"created_at" gorm:"autoCreateTime"`
-// UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
-// DeletedAt   gorm.DeletedAt `json:"deleted_at" gorm:"index"`
-
-// ID          uint           `json:"id" gorm:"primaryKey, autoIncrement"`
-// MSID        uint           `json:"ms_id" gorm:"not null"`
-// Name        string         `json:"name" gorm:"not null"`
-// Description string         `json:"description" gorm:"default:null"`
-// GateURL     string         `json:"gate_url" gorm:"index:idx_gate_url,unique"`
-// ApiURL      string         `json:"api_url" gorm:"not null"`
-// Method      string         `json:"method" gorm:"not null"`
-// CreatedAt   time.Time      `json:"created_at" gorm:"autoCreateTime"`
-// UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
-// DeletedAt   gorm.DeletedAt `json:"deleted_at" gorm:"index"`
-
-
-
-
-
-
-
-
-
-
-export default {}
+export type IModel = IFieldInput[]

@@ -1,20 +1,26 @@
 import { LeftSide, RightSide, SidedDiv } from "@components/gui/Bars"
 import { Button } from "@components/gui/Button"
 import { Buttons } from "@components/gui/Buttons"
-import { createContext, MouseEventHandler, ReactNode, useContext, useRef, useState } from "react"
-import { callback } from "src/utils"
+import { createContext, CSSProperties, MouseEventHandler, ReactNode, useContext, useRef, useState } from "react"
+import { callback, cl } from "src/tools"
 import { EventEmitter } from "stream"
 import styles from "./styles.module.scss"
+
+export { styles }
 
 let window_id = 0;
 const NewWindowID = () => (window_id++)
 
 interface IWindowOptions{
-    x: number,
-    y: number,
-    h: number,
-    w: number,
+    x: number | string,
+    y: number | string,
+    h: number | string,
+    w: number | string,
     title: string,
+    className?: string,
+    wrapperprops?: any,
+    wrapper?: (props: { children: ReactNode }) => JSX.Element
+    style?: CSSProperties,
     onClose?: MouseEventHandler
 }
 
@@ -26,6 +32,8 @@ interface IWindow{
 
 interface ITaskManagerContext{
     windows: IWindow[],
+    create(): IWindow,
+    add(window: IWindow): void,
     open(content: JSX.Element, options: IWindowOptions): void,
     close(id: number): void,
 }
@@ -68,6 +76,12 @@ function MakePointInRect(point: IPoint, rect: IRect){
     }
 }
 
+const DefaultWindowWrapper = (props: { children: ReactNode }) => {
+    return <>
+        {props.children}
+    </>
+}
+
 const Window = (props: IWindowProps) => {
     const { close } = useWindows()
     const [ isDown, setIsDown ] = useState(false)
@@ -75,16 +89,28 @@ const Window = (props: IWindowProps) => {
 
     const [ options, setOptions ] = useState(props.data.options)
 
-    return <>
+
+    const tr_x = (options.x === 'center') ? 'translateX(-50%)' : null
+    const tr_y = (options.y === 'center') ? 'translateY(-50%)' : null
+    let transform = (tr_x || tr_y) ? [tr_x, tr_y].join(' ') : undefined
+
+    const x = (typeof options.x == 'number') ? (options.x + 'px') : ( options.x === 'center' ? '50%' : options.x )
+    const y = (typeof options.y == 'number') ? (options.y + 'px') : ( options.y === 'center' ? '50%' : options.y )
+
+    const { style = {}, className, wrapper: Wrapper = DefaultWindowWrapper, wrapperprops = {} } = options
+
+    return <Wrapper {...wrapperprops}>
         <div 
             ref={ref as any}
-            className={styles.window} 
+            className={cl(styles.window, className)} 
             style={{ 
-                left: options.x + 'px', 
-                top: options.y + 'px',
-                height: options.h + 'px',
-                width: options.w + 'px',
-            }}
+                ...style,
+                '--w': (typeof options.w == 'number') ? ( options.w + 'px') : options.w,
+                '--h': (typeof options.h == 'number') ? ( options.h + 'px') : options.h,
+                left: x, 
+                top: y,
+                transform
+            } as any}
         >
             <div 
                 className={styles.windowheader}
@@ -97,7 +123,7 @@ const Window = (props: IWindowProps) => {
                         const { movementX, movementY } = event
                         const rect = ref.current.getBoundingClientRect();
                         const pos = { x: (rect.x + movementX), y: (rect.y + movementY) }
-                        const border = { top: 0, left: 0, bottom: window.innerHeight - options.h, right: window.innerWidth - options.w }
+                        const border = { top: 0, left: 0, bottom: window.innerHeight - (rect.bottom - rect.top), right: window.innerWidth - (rect.right - rect.left) }
                         setOptions({
                             ...options,
                             ...MakePointInRect(pos, border)
@@ -106,22 +132,28 @@ const Window = (props: IWindowProps) => {
                 }}
             >
                 <SidedDiv>
-                    <LeftSide><span>{`[${props.data.id}]`}{options.title ?? 'WND'}</span></LeftSide>
+                    <LeftSide><span title={`Window #${props.data.id}`}>{options.title}</span></LeftSide>
                     <RightSide>
                         <Buttons>
-                            <Button onClick={(event) => { 
+                            <Button className={styles.close_button} onClick={(event) => { 
                                 close(props.data.id) 
                                 props.data.options.onClose && props.data.options.onClose(event)
-                            }}>x</Button>
+                            }}/>
                         </Buttons>
                     </RightSide>
                 </SidedDiv>    
             </div> 
-            <div className={styles.windowcontent}>
+            <div 
+                className={styles.windowcontent} 
+                style={{
+                    height: 'var(--h)',
+                    width: 'var(--w)',
+                }}
+            >
                 {props.data.content}
             </div>
         </div>
-    </>
+    </Wrapper>
 }
 
 const Windows = () => { 
@@ -153,15 +185,25 @@ export const TaskManagerLayout = (props: ITaskManagerLayoutProps) => {
 
     const options: ITaskManagerContext = {
         windows,
+
         open(content, options) {
             setWindows([ ...windows, {
                 id: NewWindowID(),
                 content, options                
             }])
         },
+
         close(id) {
             setWindows(windows.filter(window => window.id != id))
         },
+
+        create(){
+            return { id: NewWindowID() } as any
+        },
+
+        add(window){
+            setWindows([ ...windows, window])
+        }
     }
 
     return <>

@@ -1,11 +1,11 @@
 import { useState, useEffect, MouseEventHandler } from 'react';
 import { useBackground } from 'src/contexts/bg';
-import { callback, cl } from 'src/utils';
+import { callback, cl } from 'src/tools';
 import { styles } from '.';
 
 export interface IOptionData<Type = any> {
     id: number,
-    title: string,
+    title?: string,
     value: Type,
 }
 
@@ -19,12 +19,15 @@ interface IOptionProps<Type = any> extends IOptionData<Type> {
 // const options = (typeof _options == 'function') ? _options() : _options
 
 
-type ISelectOptions<Type> = IOptionData<Type>[] | callback<IOptionData<Type>[]> | callback<Promise<IOptionData<Type>[]>> 
+export type ISelectOptions<Type=any> = IOptionData<Type>[] | callback<IOptionData<Type>[]> | callback<Promise<IOptionData<Type>[]>> 
+export type ISelectEventHandler<Type=any> = (option: IOptionData<Type>, index: number) => void | Promise<void>
 
 interface ISelectProps<Type = any> {
+    className?: string,
     options: ISelectOptions<Type>,
     defaultValue?: Type,
-    onSelect?(event: any, option: IOptionData<Type>, index: number): void | Promise<void>
+    currentValue?: Type,
+    onSelect?: ISelectEventHandler
 }
 
 function Option(props: IOptionProps) {
@@ -37,13 +40,14 @@ function Option(props: IOptionProps) {
 }
 
 export function Select<Type = any>(props: ISelectProps<Type>) {
-    const { options: _options, onSelect, defaultValue } = props
+    const { options: _options, onSelect, defaultValue, currentValue } = props
     const [ isOpen, setOpened ] = useState(false)
     const [ options, setOptions ] = useState(typeof _options == 'object' ? _options : [])
 
     const bg = useBackground()
 
     const getDefaultOption = (list = options) => list.find((({ value }) => value == defaultValue)) ?? list[0]
+    const getOptionByValue = (value: any, list = options) => list.find(((option) => option.value == value)) ?? list[0]
 
     const fetchOptions = async() => {
         const { options } = props
@@ -67,10 +71,12 @@ export function Select<Type = any>(props: ISelectProps<Type>) {
     useEffect(() => { fetchOptions() }, [])
 
     //const options = _options.length ? _options : [{ id: 0, title: 'Default', value: undefined } as IOptionData]
-    const [currentOption, setCurrentOption] = useState(getDefaultOption)
+    const [_currentOption, setCurrentOption] = useState(getDefaultOption)
+
+    const currentOption = currentValue ? getOptionByValue(currentValue) : _currentOption
 
     return <>
-        <div className={cl(styles.selectwrapper, [styles.active, isOpen])} onClick={() => setOpened(!isOpen)}>
+        <div className={cl(styles.selectwrapper, [styles.active, isOpen], props.className)} onClick={() => setOpened(!isOpen)}>
             <div className={styles.select}>
                 { 
                     currentOption 
@@ -78,7 +84,7 @@ export function Select<Type = any>(props: ISelectProps<Type>) {
                         className={styles.current}
                         key={currentOption.id}
                         id={currentOption.id}
-                        title={currentOption.title}
+                        title={currentOption.title ?? `${currentOption.value}`}
                         value={currentOption.value} 
                         onClick={() => {
                             setOpened(true)
@@ -104,7 +110,7 @@ export function Select<Type = any>(props: ISelectProps<Type>) {
                                     (option, index) => <Option
                                         onClick={(event) => {
                                             setCurrentOption(option)
-                                            onSelect && onSelect(event, option, index)
+                                            onSelect && onSelect(option, index)
                                             setOpened(false)
                                             bg.close()
                                             console.log({ selected: option })
@@ -112,7 +118,7 @@ export function Select<Type = any>(props: ISelectProps<Type>) {
                                         className={cl(styles.others, [styles.active, option.id == currentOption.id])}
                                         key={option.id}
                                         id={option.id}
-                                        title={option.title}
+                                        title={option.title ?? `${option.value}`}
                                         value={option.value}
                                     />
                                 )

@@ -1,0 +1,25 @@
+.select{
+    display: inline-block;
+}
+
+.array, .object{
+    display: flex;
+    flex-direction: column;
+
+    margin-right: 10px;
+}
+
+.field{
+    display: flex;
+    flex-direction: row;
+}
+
+.ctor{
+    display: flex;
+    flex-direction: column;
+}
+
+.typeeditor{
+    display: flex;
+    flex-direction: row;
+}

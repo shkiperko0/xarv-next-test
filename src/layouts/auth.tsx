@@ -1,6 +1,5 @@
 import { ReactNode, useMemo, useState } from "react"
 import { AuthContext, publicProfile } from "src/contexts/auth"
-import { AuthForm } from "src/forms/auth"
 import { clearAuthCookies, getCookie, getDocument, parseToken } from "src/tools"
 import { ITokenPayload_V1, IUserProfile } from "src/tools/types"
 

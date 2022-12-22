@@ -94,3 +94,50 @@
 .dropdownwrapper{
     position: relative;
 }
+
+.confirm_dialog {
+    background-color: white;
+    border-radius: 20px;
+
+    padding: 15px;
+    display: flex;
+
+    gap: 20px;
+
+    flex-direction: column;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 120%;
+
+    .button{
+        padding: 3px 15px;
+        border-radius: 5px;
+        border: 1px solid gray;
+        cursor: pointer;
+    }
+}
+
+.accept_button{
+    color: green;
+}
+
+.reject_button{
+    color: red;
+}
+
+.pagination{
+    display: inline-flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.paginationelement{
+    padding: 2px 5px;
+    background-color: white;
+    border-radius: 3px;
+    border: 1px solid gray;
+}
+
+.paginationelement:hover{
+    outline: 1px solid blue;
+}

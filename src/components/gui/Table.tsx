@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { cl, Type2Text } from "src/utils"
+import { cl, Type2Text } from "src/tools"
 import { styles } from "."
 
 export interface ITableRowProps<Type=any>{ 

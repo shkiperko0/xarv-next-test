@@ -1,8 +1,6 @@
 import { createContext, Dispatch, SetStateAction, useContext } from "react"
 import statics from "src/statics"
 import { fetchJSON } from "src/tools"
-import { HttpMethod } from "src/tools/types"
-
 
 interface IContentCategory{
   id: number,
@@ -27,7 +25,7 @@ export async function initStorage(value: IGStorageData, cb: Dispatch<SetStateAct
   if(value == null){ cb({
 
       content: {
-        categories: await fetchJSON<null, IContentCategory[]>('GET', `${statics.host.api}/api/v1/content/categories`)
+        categories: await fetchJSON<IContentCategory[]>('GET', `${statics.host.api}/api/v1/content/categories`)
       }
 
   })}

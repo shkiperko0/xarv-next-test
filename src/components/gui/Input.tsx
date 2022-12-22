@@ -1,5 +1,5 @@
 import { InputHTMLAttributes } from 'react'
-import { cl } from 'src/utils'
+import { cl } from 'src/tools'
 import { styles } from '.'
 
 interface IMyInputProps{

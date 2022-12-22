@@ -1,5 +1,6 @@
 import styles from './MetaEditor.module.scss'
 import { useState } from 'react'
+import { boolToString, parseBool } from 'src/tools'
 
 type IMetaType = string | 'boolean' | 'number' | 'string' | 'object' | 'boolean[]' | 'number[]' | 'string[]' | 'object[]' // | 'class' | 'class[]'
 
@@ -98,19 +99,6 @@ function ObjectField(props: IEditorProps<object>) {
 		{name.length ? <span>{`${name}:`}</span> : null}
 		{Object.entries(scheme).map(([name, key]) => cb(name, key))}
 	</div>
-}
-
-export function boolToString(bool: any): string{
-	switch(typeof bool){
-		case 'boolean': 	return bool 			? 'true' : 'false'
-		case 'number': 		return bool > 0 		? 'true' : 'false'
-		case 'string': 		return parseBool(bool) 	? 'true' : 'false'
-	}
-	return 'false'
-}
-
-export function parseBool(str: string): boolean{
-	return ['y', 'yes', 'true', '+'].indexOf(str) != -1 || parseInt(str, 10) > 0
 }
 
 function BooleanField(props: IEditorProps<boolean>) {

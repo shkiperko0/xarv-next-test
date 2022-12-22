@@ -3,6 +3,8 @@ namespace statics {
     export const host = {
         main: 'http://192.168.0.25:3000', 
         api: 'http://192.168.0.25',
+        
+        eam: 'https://eamgames.net',
     }
 
     export const url = {

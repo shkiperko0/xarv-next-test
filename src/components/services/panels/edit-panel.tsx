@@ -3,7 +3,7 @@ import { Buttons }from "@components/gui/Buttons"
 import { useRouter } from "next/router"
 import { useState } from "react"
 import statics from "src/statics"
-import { AnyJSON_fromBase64, useJSONFetch } from "src/tools"
+import { AnyJSON_fromBase64, boolToString, useJSONFetch } from "src/tools"
 import { getServiceBySlug, IServiceMenuProps, ItemEditMenu, styles } from ".."
 import { svcs_item } from "../models"
 
@@ -14,7 +14,7 @@ export function EditItemMenu(props: IServiceMenuProps){
 
     const svc_item = svcs_item[slug]
     const svc = getServiceBySlug(slug)
-    if(!svc_item || !svc) return <></>
+    if(!svc_item || !svc) return <>{boolToString(svc_item)} {boolToString(svc)} {slug}</>
 
     const { fetch } = useJSONFetch('POST', statics.host.api + svc.apiEditEntry)
 
