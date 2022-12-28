@@ -1,10 +1,10 @@
 import statics from "src/statics"
 import { fetchJSON } from "src/tools"
-import { IFetchProvider, Params_Paged, Response_ID } from "src/tools/types"
+import { IFetchProvider, null_list, Params_Paged, Response_List } from "src/tools/types"
 
+export const UsersProvider = new class implements IFetchProvider{
 
-export const ItemsProvider = new class implements IFetchProvider{
-    async add(data: any): Promise<Response_ID> {
+    async add(data: any): Promise<any> {
         throw new Error("Method not implemented.")
     }
 
@@ -16,14 +16,14 @@ export const ItemsProvider = new class implements IFetchProvider{
         throw new Error("Method not implemented.")
     }
 
-    async list(req: Params_Paged) {
+    async list(req: Params_Paged): Promise<Response_List> {
         const { page, perpage } = req
-        const res = await fetchJSON('POST', statics.host.api + '/api/v1/market/items/list', {
+        const res = await fetchJSON('POST', statics.host.api + '/api/v1/users/list', {
             offset: page * perpage,
             limit: perpage,
             count: true,
         })
-        return res ?? { list: [], count: 0 }
+        return res ?? null_list
     }
 
     async delete(id: number): Promise<void> {

@@ -38,6 +38,9 @@
 .filemanager{
     height: fit-content;
     padding: 10px;
+    border-radius: 5px;
+    border: 1px solid black;
+    cursor: pointer;
 }
 
 .refresh{

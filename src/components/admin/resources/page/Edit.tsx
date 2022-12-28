@@ -1,5 +1,5 @@
 import { Edit, FormDataConsumer, SimpleForm, useEditContext } from 'react-admin';
-import { EditToolbar, PostPageEditor } from '../editors';
+import { EditToolbar, PostCommonEditor } from '../editors';
 
 const defaultValues = { caption: 'Page title', text: 'Sample text', meta: {}, template: 'post'}
 
@@ -10,7 +10,7 @@ export default function(props: any){
 	return <>
 		<Edit title="Edit page">
 			<SimpleForm defaultValues={defaultValues} toolbar={<EditToolbar/>}>
-				<FormDataConsumer>{ fd => <PostPageEditor data={fd.formData} /> }</FormDataConsumer>
+				<FormDataConsumer>{ fd => <PostCommonEditor data={fd.formData} /> }</FormDataConsumer>
 			</SimpleForm>
 		</Edit>
 	</>

@@ -10,7 +10,7 @@ interface IContentCategory{
 
 export interface IGStorageData{
   content: {
-    categories: IContentCategory[]
+    categories?: IContentCategory[]
   }
 }
 

@@ -12,10 +12,10 @@ let window_id = 0;
 const NewWindowID = () => (window_id++)
 
 interface IWindowOptions{
-    x: number | string,
-    y: number | string,
-    h: number | string,
-    w: number | string,
+    x?: number | string,
+    y?: number | string,
+    h?: number | string,
+    w?: number | string,
     title: string,
     className?: string,
     wrapperprops?: any,
@@ -30,7 +30,7 @@ interface IWindow{
     options: IWindowOptions
 }
 
-interface ITaskManagerContext{
+export interface ITaskManagerContext{
     windows: IWindow[],
     create(): IWindow,
     add(window: IWindow): void,
@@ -87,8 +87,17 @@ const Window = (props: IWindowProps) => {
     const [ isDown, setIsDown ] = useState(false)
     const ref = useRef<HTMLElement | undefined>(undefined)
 
-    const [ options, setOptions ] = useState(props.data.options)
+    const [ options, setOptions ] = useState(() => {
+        const { 
+            x = 'center', 
+            y  = 'center', 
+            w = 'auto', 
+            h = 'auto', 
+            ...other 
+        } = props.data.options
 
+        return { x, y, w, h, ...other}
+    })
 
     const tr_x = (options.x === 'center') ? 'translateX(-50%)' : null
     const tr_y = (options.y === 'center') ? 'translateY(-50%)' : null
@@ -103,8 +112,7 @@ const Window = (props: IWindowProps) => {
         <div 
             ref={ref as any}
             className={cl(styles.window, className)} 
-            style={{ 
-                ...style,
+            style={{
                 '--w': (typeof options.w == 'number') ? ( options.w + 'px') : options.w,
                 '--h': (typeof options.h == 'number') ? ( options.h + 'px') : options.h,
                 left: x, 
@@ -146,6 +154,9 @@ const Window = (props: IWindowProps) => {
             <div 
                 className={styles.windowcontent} 
                 style={{
+    				resize: 'both',
+					overflow: 'scroll',
+                    ...style,
                     height: 'var(--h)',
                     width: 'var(--w)',
                 }}

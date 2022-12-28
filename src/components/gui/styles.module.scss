@@ -41,6 +41,7 @@
 .input{
     padding: 2px 5px;
     width: 250px;
+    height: 25px;
     background-color: white;
     border: 1px solid gray;
     border-radius: 2px;
@@ -50,13 +51,17 @@
     }
 }
 
+.selectwrapper{
+    --w: 250px;
+}
+
 .selectwrapper, .optionwrapper{
-    width: 250px;
+    width: var(--w);
 }
 
 .option{
     padding: 2px 5px;
-    width: 250px;
+    width: var(--w);
     background-color: white;
     border: 1px solid gray;
     border-radius: 2px;
@@ -69,7 +74,7 @@
 }
 
 .select{
-    width: 250px;
+    width: var(--w);
 
     &wrapper.active > .select{
         outline: 1px solid blue;

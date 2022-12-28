@@ -1,194 +1,284 @@
 import styles from './styles.module.scss'
-import { ChangeEventHandler, MouseEventHandler, useMemo, useState } from 'react'
+import { ChangeEventHandler, createContext, Dispatch, MouseEventHandler, SetStateAction, useContext, useEffect, useMemo, useState } from 'react'
 import { ISelectEventHandler, ISelectOptions, Select } from '@components/gui/Select'
 import { Button } from '@components/gui/Button'
-import { parseBool } from 'src/tools'
+import { Input } from '@components/gui/Input'
+import { cl, defaultField_BooleanSelect, GetHolderValueByPath, ObjectRenameField, parseBool, SetHolderValueByPath } from 'src/tools'
 
-type IDataType = 'boolean' | 'number' | 'string' | 'object' | 'undefined'
-type IDataClass = 'Array' | 'Object' | 'null'
 
-const CHolderField = '*'
+type IDataTypeClasses = 'Array' | 'Object' | 'null'
+type IDataType = 'boolean' | 'number' | 'string' | 'bigint' | IDataTypeClasses | 'undefined'
 
-class JSONConstructor{
-    [CHolderField]: any = undefined
+export type IEditor<Type=any> = (props: IEditorProps) => JSX.Element
 
-    constructor(data: any){
-        this[CHolderField] = data
-    }
-
-    getData(){
-        return this[CHolderField]
-    }
-
-    cbByPath(path: string, cb: (parent: object, key: string) => any){
-        if(path == '')
-            return cb(this, CHolderField)
-
-        let last = this[CHolderField]
-        const parts = path.split('/').slice(1)
-        if(parts.length){
-            let current = last
-            let lpart: any
-    
-            for(const part of parts){
-                last = current
-                current = current[part]
-                lpart = part
-            }
-    
-            return cb(last, lpart)
-        }
-    
-        return undefined
-    }
-    
-    getValueByPath(path: string){
-        return this.cbByPath(path, (parent, key) => parent[key])
-    }
-    
-    
-    setValueByPath(path: string, value: any){
-        return this.cbByPath(path, (parent, key) => { parent[key] = value })
-    }
-    
-    deleteValueByPath(path: string){
-        return this.cbByPath(path, (parent, key) => { delete parent[key] })
-    }
-}
-
-export interface IEditorProps<Type=any> {
-	ctor: JSONConstructor,
-	path: string,
-}
-
-export type IEditor<Type=any> = (props: IEditorProps<Type>) => JSX.Element
+type IObjectScheme = { [name: string]: IDataKey }
+type IArrayScheme = IDataKey[]
+type IScheme = IObjectScheme | IArrayScheme
 
 export interface IDataKey<Type=any> {
 	type: IDataType,
-    class?: IDataClass, 
+    scheme?: IScheme
 	Editor?: IEditor<Type>,
-    defaultValue?: IData,
-    
 	title?: string,
 	description?: string,
-	placeholder?: Type,
-	
-    scheme?: IDataScheme,
 }
 
-export type IDataScheme = {[key: string]: IDataKey} | IDataKey[] 
 export type IData = any
 
 export const data_number: IDataKey = { type: 'number', Editor: EditorNumber }
 export const data_string: IDataKey = { type: 'string', Editor: EditorString }
 export const data_boolean: IDataKey = { type: 'boolean', Editor: EditorBoolean }
-export const data_object: IDataKey = { type: 'object', class: 'Object', Editor: EditorObject }
-export const data_array: IDataKey = { type: 'object', class: 'Array', Editor: EditorArray }
+export const data_object: IDataKey = { type: 'Object', Editor: EditorObject }
+export const data_array: IDataKey = { type: 'Array', Editor: EditorArray }
 
-function EditorBoolean(props: IEditorProps<boolean>) {
-	const { path, ctor } = props
+function EditorBoolean(props: IEditorProps) {
+    const { holder, onChange } = useEditor()
+	const { path } = props
 
-	return <span className={styles['field-value']}>
-		{/* <a title={path}>{title ?? name}: </a> */}
-		<select 
-			onChange={event => { 
-				const value = parseBool(event.currentTarget.value)
-				//console.log({ name: title ?? name, value})
-				//setValue(value)
-                ctor.setValueByPath(path, value)
+	return <span className={styles.boolean}>
+		<Select 
+            className={styles.select}
+            onSelect={(option) => { 
+                SetHolderValueByPath(holder, path, option.value)
+                onChange(holder.default)
 			}}
-		>
-			<option value="true">true</option>
-			<option value="false">false</option>
-		</select>
+
+            options={defaultField_BooleanSelect.options}
+        />
 	</span>
 }
 
-function EditorString(props: IEditorProps<string>) {
-	const { path, ctor } = props
-	return <span className={styles['field-value']}>
-		{/* <a title={path}>{title ?? name}: </a> */}
-		<input
-			type='text'
-			defaultValue={ ctor.getValueByPath(path) }
-			onChange={event => ctor.setValueByPath(path, event.currentTarget.value) }
-		/>
+function EditorString(props: IEditorProps) {
+    const { holder, onChange } = useEditor()
+	const { path } = props
+    const [ value, setValue ] = useState<string>(() => GetHolderValueByPath(holder, path))
+
+    if(typeof value !== 'string'){
+        return <>
+            Type Error on string <>{typeof value} {path} {JSON.stringify({value})}</>
+        </>
+    }
+    
+    const format = (value: string) => {
+        return value
+    }
+
+    const parse = (text: string) => {
+        return text
+    }
+
+    const onValueChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        const new_value = parse(e.currentTarget.value)
+        setValue(new_value)
+        SetHolderValueByPath(holder, path, new_value)
+        onChange(holder.default)
+    }
+
+	return <span className={styles.string}>
+		<Input className={styles.input} type='text' defaultValue={ format(value) } onChange={onValueChange} />
 	</span>
 }
 
-function EditorNumber(props: IEditorProps<number>) {
-	const { path, ctor } = props
-	return <span className={styles['field-value']}>
-		{/* <a title={path}>{title ?? name}: </a> */}
-		<input
-			type='text'
-			defaultValue={ ctor.getValueByPath(path)}
-			onChange={event => ctor.setValueByPath(path, parseInt(event.currentTarget.value, 10)) }
-		/>
+function EditorNumber(props: IEditorProps) {
+    const { holder, onChange } = useEditor()
+	const { path } = props
+    const defaultValue = useMemo(() => GetHolderValueByPath(holder, path), [])
+    const [ value, setValue ] = useState<number>(defaultValue)
+
+    if(typeof value !== 'number'){
+        return <>
+            Type Error on number <>{typeof value} {path} {JSON.stringify({value})}</>
+        </>
+    }
+    
+    const format = (value: number) => {
+        return value.toString()
+    }
+
+    const parse = (text: string) => {
+        return parseInt(text, 10)
+    }
+
+    const onValueChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        const new_value = parse(e.currentTarget?.value)
+        setValue(new_value)
+        SetHolderValueByPath(holder, path, new_value)
+        onChange(holder.default)
+    }
+
+	return <span className={styles.number}>
+		<Input className={styles.input} type='text' defaultValue={ format(defaultValue) } onChange={onValueChange} />
 	</span>
 }
+
+type RenameHandler = (oldname: string, neaname: string) => void
 
 interface IEditorObjectFieldProps{
-    ctor: JSONConstructor,
     path: string,
     name: string,
-    onChangeName: (path: string, name: string) => void,
+    onRename: RenameHandler,
 }
 
 function EditorObjectField(props: IEditorObjectFieldProps) {
-    const { ctor, path, name, onChangeName } = props
+    const { holder, onChange } = useEditor()
+	const { path } = props
+    const [ name, setName ] = useState(props.name)
+    const { onRename } = props
+
+    const [ state, setState ] = useState(() => GetHolderValueByPath(holder, path))
+
+    const utypeName = GetValueUType(state)
+    const Editor = GetEditor(utypeName)
+
+    const onTC_Changed = (utypeName) => {
+        const data = GetUTypeDefaultValue(utypeName) as unknown
+        setState(() => data)
+        SetHolderValueByPath(holder, path, data)
+        onChange(holder.default)
+    }
+
+    const onSelectType: ISelectEventHandler = (option) => {
+        onTC_Changed({ utypeName: option.value })
+    }
+
+    const onNameChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        const newname = e.target.value
+        onRename(name, newname)
+        setName(newname)
+    }
+
+    const GetStyleTC = () => styles[utypeName.toLowerCase()]
+    
     return <>
-        <span className={styles.field}>
-            <input defaultValue={name} onChange={(e) => onChangeName(path, e.target.value)}/>
-            <TypeEditor ctor={ctor} path={path + `/${name}`} />asdas
+        <span className={cl(styles.field, GetStyleTC)}>
+            <div>
+                <Input className={styles.input} defaultValue={name} onChange={onNameChange}/>
+                <span className={styles.types}>
+                    <Select className={cl(styles.select, styles.type)} onSelect={onSelectType} options={type_options} defaultValue={utypeName} />
+                </span>
+            </div>
+            <Editor path={path} />
         </span>
     </>
 }
 
-function EditorObject(props: IEditorProps<object>) {
-	const { ctor, path } = props
-    const [ data , setData ] = useState(() => ctor.getValueByPath(path))
+export function TypeEditor(props: IEditorProps){
+    const { holder, onChange } = useEditor()
+    const { path, scheme } = props
 
-    if(typeof data != 'object' || data === null || data === undefined)
-        return <>{typeof data} {path} {JSON.stringify({ctor})}</>
+    const [ state, setState ] = useState(() => GetHolderValueByPath(holder, path))
 
-    const addField: MouseEventHandler = () => {
-        // const new_data = { ...data, [CHolderField]: undefined }
-        // setValueByPath(ctor, path, new_data)
-        // setData(new_data)
+    const utypeName = GetValueUType(state)
+    const Editor = GetEditor(utypeName)
+
+    const onTC_Changed = (utypeName: IDataType) => {
+        const data = GetUTypeDefaultValue(utypeName) as unknown
+        setState(() => data)
+        SetHolderValueByPath(holder, path, data)
+        onChange(holder.default)
     }
 
-    const onChangeName = (fpath: string, name: string) => {
-        // const data = getValueByPath(ctor, fpath)
-        // setValueByPath(ctor, path + '/' + name , data)
-        // deleteValueByPath(ctor, fpath)
+    const onSelectType: ISelectEventHandler = (option) => {
+        onTC_Changed(option.value)
     }
 
-	return <span className={styles.object}>
-        <>{typeof data} {path} {JSON.stringify({ctor})}</>
-        { Object.entries(data).map(([name]) => <EditorObjectField onChangeName={onChangeName} name={name} ctor={ctor} path={path + `/${name}`} />) }
-        <Button onClick={addField}>Add field</Button>
-	</span>
+    useEffect(() => {
+        if(scheme === undefined) return 
+
+        console.log({ a: scheme.type, b: utypeName })
+
+        if(utypeName != scheme.type){
+            const data = GetUTypeDefaultValue(scheme.type)
+            setState(() => data)
+            SetHolderValueByPath(holder, path, data)
+            onChange(holder.default)
+        }
+
+    }, [scheme])
+
+    return <>
+		{/* <div className={styles.typeeditor}> */}
+            <span className={styles.types}>
+                <Select className={cl(styles.select, styles.type)} onSelect={onSelectType} options={type_options} defaultValue={utypeName} />
+            </span>
+            <Editor path={path} scheme={scheme} />
+        {/* </div> */}
+    </>
 }
 
-function EditorArray(props: IEditorProps<Array<any>>) {
-	const { ctor, path } = props
-    const [ data = [], setData ] = useState(() => ctor.getValueByPath(path))
-
-    if(typeof data != 'object' || data === null || data === undefined)
-        return <>{typeof data} {path} {JSON.stringify({ctor})}</>
-
-    const addValue: MouseEventHandler = () => {
-        const new_data = [ ...data, undefined ]
-        ctor.setValueByPath(path, new_data)
+function EditorObject(props: IEditorProps) {
+    const { holder, onChange } = useEditor()
+	const { path, scheme } = props
+    const [ data = {}, setData ] = useState(() => GetHolderValueByPath(holder, path))
+    const utypeName = GetValueUType(data)
+    
+    const addField: MouseEventHandler = () => {
+        const new_data = { ...data, default: null }
+        SetHolderValueByPath(holder, path, new_data)
         setData(new_data)
+        onChange(holder.default)
     }
 
-	return <span className={styles.array}>
-        {typeof data} {path} {JSON.stringify({ctor})}
-        { data.map((_, index) => <TypeEditor ctor={ctor} path={path + `/${index}`} />) }
-        <Button onClick={addValue}>Add value</Button>
-	</span>
+    const onRename: RenameHandler = (oldname, newname) => {
+        ObjectRenameField(data, oldname, newname)
+        //setData({...data})
+        onChange(holder.default)
+    }
+
+    const CheckFields = (scheme: IObjectScheme) => {
+
+    }
+
+    useEffect(() => {
+        if(scheme === undefined) return 
+
+        if(utypeName != scheme.type){
+            const data = GetUTypeDefaultValue(scheme.type)
+            setData(() => data)
+            
+            if(scheme.type == 'Object')
+                CheckFields(scheme.scheme as IObjectScheme)
+
+            SetHolderValueByPath(holder, path, data)
+            onChange(holder.default)
+        }
+
+    }, [scheme])
+
+    if(data instanceof Object){
+        return <span className={styles.object}>
+            { Object.entries(data).map(([name]) => <EditorObjectField onRename={onRename} name={name} path={path + `/${name}`} />) }
+            <Button onClick={addField}>Add field</Button>
+        </span>
+    }
+
+    return <>
+        Type Error on Object <>{typeof data} {path} {JSON.stringify({data})}</>
+    </>
+}
+
+function EditorArray(props: IEditorProps) {
+    const { holder, onChange } = useEditor()
+	const { path } = props
+    const [ data = [], setData ] = useState(() => GetHolderValueByPath(holder, path))
+
+    const addValue: MouseEventHandler = () => {
+        const new_data = [ ...data, null ]
+        SetHolderValueByPath(holder, path, new_data)
+        setData(new_data)
+        onChange(holder.default)
+    }
+
+    if(data instanceof Array){
+        return <span className={styles.array}>
+            { data.map((_, index) => <TypeEditor path={path + `/${index}`} />) }
+            <Button onClick={addValue}>Add value</Button>
+        </span>
+    }
+
+    return <>
+        Type Error on Array <>{typeof data} {path} {JSON.stringify({data})}</>
+    </>
 }
 
 export function NormalizeData(data: IData, key: IDataKey) {
@@ -198,10 +288,7 @@ export function NormalizeData(data: IData, key: IDataKey) {
         return GetKeyDefaultValue(key)
     }
 
-    if(typeof data == 'object' && data.constructor.name != key.class){
-
-        if(key.scheme)
-
+    if(typeof data == 'object' && data.constructor.name != key.type){
 
         return GetKeyDefaultValue(key)
     }
@@ -209,46 +296,14 @@ export function NormalizeData(data: IData, key: IDataKey) {
 	return data
 }
 
-function GetObjetcKeyDefaultValue(key: IDataKey) {
-
-	switch(key.class){
-        case 'Array': return new Array()
-        case 'Object': return new Object()
-        case 'null': return null
+export function GetSchemeFromData(data: any): IDataKey {
+	let scheme: IDataKey = {
+        type: typeof data as any,        
     }
-
-	return {}
-}
-
-export function GetKeyDefaultValue(key: IDataKey): IData {
-	if (!key) debugger
-
-	if (key.defaultValue) return key.defaultValue
-
-	switch (key.type) {
-		case 'number': return 0
-		case 'undefined': return undefined
-		case 'string': return ''
-		case 'boolean': return false
-		case 'object': return GetObjetcKeyDefaultValue(key)
-	}
-}
-
-
-export function GetSchemeFromData(data: any): IDataScheme {
-	let scheme: IDataScheme = {}
-
-	for (const [key, value] of Object.entries(data)) {
-		const type = typeof value;
-    }
-
 	return scheme
 }
 
-
-
-
-export type DataChangeHandler = (data: IData) => void
+export type ChangeHandler = (data: IData) => void
 
 
 
@@ -256,130 +311,72 @@ export interface ITypeEditorProps{
 
 } 
 
-type IDataTC = [IDataType, IDataClass?]
-
-function GetConstructor(data: any): IDataClass | undefined {
-    return typeof data == 'object' ? (data ? data.constructor.name : 'null') : undefined
+function GetTypeClassName(data: null | object): IDataTypeClasses {
+    if(data === null) return 'null'
+    return data.constructor.name as any
 }
 
-function GetValueTC(data: any): IDataTC {
-    return [ (typeof data as IDataType), GetConstructor(data) ]
+function GetValueUType(data: any): IDataType {
+    const typeName = typeof data
+    const utypeName = (typeName == 'object' ? GetTypeClassName(data) : typeName) as IDataType
+    return utypeName
 }
 
-function GetEditor([data_t, class_t]: IDataTC): IEditor {
+function GetEditor(utypeName: IDataType): IEditor {
 
-    if(data_t == 'undefined')
-        return () => <>{`<undefined>`}</>
+    // if(typeName == 'undefined')
+    //     return () => <>{`<undefined>`}</>
 
-    if(data_t == 'boolean')
+    if(utypeName == 'boolean')
         return EditorBoolean
 
-    if(data_t == 'number')
+    if(utypeName == 'number')
         return EditorNumber
 
-    if(data_t == 'string')
+    if(utypeName == 'string')
         return EditorString
 
-    if(data_t == 'object'){
-        
-        if(class_t == 'Array')
-            return EditorArray
+    if(utypeName == 'null')
+        return () => <>{`<null>`}</>
+    
+    if(utypeName == 'Array')
+        return EditorArray
 
-        if(class_t == 'Object')
-            return EditorObject
+    if(utypeName == 'Object')
+        return EditorObject
 
-        if(class_t == 'null')
-            return () => <>{`<null>`}</>
-
-        return () => <>Invalid editor {data_t}:{class_t}</>
-    }
-
-    return () => <>Invalid editor {data_t}</>
+    return () => <>No UType Editor '{utypeName}'</>
 }
 
 const type_options: ISelectOptions<IDataType> = [
-    { id: 0, value: 'undefined' },
+//    { id: 0, value: 'undefined' },
+    { id: 0, value: 'null' },
     { id: 1, value: 'boolean' },
     { id: 2, value: 'number' },
     { id: 3, value: 'string' },
-    { id: 4, value: 'object' },
+    { id: 4, value: 'Object' },
+    { id: 5, value: 'Array' },
 ]
 
-const class_options: ISelectOptions<IDataClass> = [
-    { id: 0, value: 'null' },
-    { id: 1, value: 'Object' },
-    { id: 2, value: 'Array' },
-]
 
-function GetTCDefaultValue([type_t, class_t]: IDataTC): any{
-    if(type_t === 'boolean') return false
-    if(type_t === 'number') return 0
-    if(type_t === 'string') return ''
-    if(type_t === 'object'){
-        if(class_t === 'Array') return new Array()
-        if(class_t === 'Object') return new Object()
-        if(class_t === 'null') return null
-        return {}
-    }
+const GetUTypeDefaultValue = (utypeName: IDataType) => {
+    if(utypeName === 'boolean') return false
+    if(utypeName === 'number') return 0
+    if(utypeName === 'string') return ''
+
+    if(utypeName === 'Array') return new Array()
+    if(utypeName === 'Object') return new Object()
+    if(utypeName === 'null') return null
+
     return undefined
 }
 
-export interface ITypeEditorProps{
-    ctor: JSONConstructor,
-    path: string,
+export const GetKeyDefaultValue = (key: IDataKey) => GetUTypeDefaultValue(key.type)
+
+export interface IEditorProps {
+	path: string,
+    scheme?: IDataKey,
 }
-
-export function TypeEditor(props: ITypeEditorProps){
-    interface IValueState{
-        type: IDataType,
-        class?: IDataClass
-        data: any
-    }
-
-    const { path, ctor } = props
-
-    const [ state, setState ] = useState<IValueState>(() => {
-        const data = ctor.getValueByPath(path)
-        const tc = GetValueTC(data)
-        return { data, type: tc[0], class: tc[1] }
-    })
-
-    const tc = GetValueTC(state.data)
-    const Editor = GetEditor(tc)
-
-    const onTC_Changed = (tc: IDataTC) => {
-        const data = GetTCDefaultValue(tc)
-        setState({
-            data,
-            type: tc[0],
-            class: tc[1]
-        })
-        ctor.setValueByPath(path, data)
-    }
-
-    const onSelectType: ISelectEventHandler = (option) => {
-        onTC_Changed([ option.value, state.class ])
-    }
-
-    const onSelectClass: ISelectEventHandler = (option) => {
-        onTC_Changed([ state.type, option.value ])
-    }
-
-    const { data } = state
-
-    return <span className={styles.typeeditor}>
-        <Select className={styles.select} onSelect={onSelectType} options={type_options} defaultValue={state.type} />
-        { (tc[0] == 'object') && <Select className={styles.select} onSelect={onSelectClass} options={class_options} defaultValue={state.class} /> }
-        <Editor path={path} ctor={ctor}  />
-    </span>
-}
-
-
-export interface IDataEditorProps {
-	data: IData,
-	onChange: DataChangeHandler
-}
-
 
 function isspace(c){
     return c == '\t' || c == ' '|| c == '\n'
@@ -440,63 +437,51 @@ function tabbed(text: string){
     return result
 }
 
-export function DataConstructor(props: IDataEditorProps) {
-    // const ctor = useMemo(() => new JSONConstructor(props.data), [])
-    const [ data, setData ] = useState<any>()
-    const [ text, setText ] = useState('')
+interface IHolder{
+    default: any
+}
 
-    const print = () => {
-        try{
-            const text = JSON.stringify(data)
-            return tabbed(text)
-        }
-        catch(error){
-            return 'error'
+interface IEditorContext{
+	holder: IHolder,
+	onChange: Dispatch<SetStateAction<any>>,
+}
+
+const EditorContext = createContext<IEditorContext>(null as any)
+const { Consumer: EditorConsumer, Provider: EditorProvider } = EditorContext
+const useEditor = () => useContext(EditorContext)  
+
+export { EditorConsumer, EditorProvider, useEditor } 
+
+interface IJSON_EditorProps {
+	data?: IData,
+    scheme?: IDataKey,
+	onChange?: ChangeHandler
+}
+
+export function JSON_Editor(props: IJSON_EditorProps) {
+    const [ holder, setHolder ] = useState<IHolder>({ default: props.data ?? null })
+    const { onChange: ChangeEvent, scheme } = props
+
+    const ctx: IEditorContext = {
+        holder: holder, 
+        onChange(data){
+            ChangeEvent && ChangeEvent(data)
+            setHolder({ default: data })
         }
     }
 
-    const getData = (text: string) => {
-        try{
-            return JSON.parse(text);
-        }
-        catch(error){
-            return error
-        }
-    }
+    const json = JSON.stringify(holder)
 
-    const onChange: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-        const { target: element } = e
-        const { value: text } = element
-        //const { selectionStart, selectionEnd, selectionDirection } = element
-        try{
-            const result = JSON.parse(text);
-            const t = tabbed(text)
-            setText(t)
-            setData(getData(e.target.value))
-            if(e.target.value != t){
-                e.target.value = t
-                //Object.assign(element, { selectionStart, selectionEnd, selectionDirection })
-            }
+    console.log({ passed: scheme })
 
-        }
-        catch(error){
-
-        }
-        
-    }
-
-	return <>
-		<div className={styles.ctor}>
-            <textarea onChange={onChange} onSelect={(e)=>{
-                const { currentTarget: element } = e
-                const { selectionStart, selectionEnd, selectionDirection } = element
-                console.log({selectionStart, selectionEnd, selectionDirection})
-            }}/>
-            <textarea value={text}/>
-            {/* <TypeEditor ctor={ctor} path={CHolderField} /> */}
-         
-		</div>
-	</>
+	return <EditorProvider value={ctx}>
+        <div className={styles.editor}>
+            <TypeEditor path='default' scheme={scheme} />
+            {/* <pre className={styles.pre}>
+                {tabbed(json)}
+            </pre> */}
+        </div>
+	</EditorProvider>
 }
 
 

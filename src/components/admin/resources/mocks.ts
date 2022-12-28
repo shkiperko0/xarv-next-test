@@ -1,82 +1,4 @@
-import { ChangeHandler, IDataKey, JSON_Editor } from "@components/dataconstructor"
-import { useState } from "react"
-import { InteractionProps } from 'react-json-view'
-import dynamic from 'next/dynamic'
-const ReactJson = dynamic(() => import('react-json-view'), { ssr: false })
-
-const text_scheme: IDataKey = {
-  type: 'Array',
-  scheme: [
-    {
-      type: 'Object',
-      scheme: {
-        changingColor: { type: 'boolean' },
-        text: { type: 'string'},
-      }
-    }
-  ]
-}
-
-const beveledBlock_scheme: IDataKey = {  
-  type: 'Object',
-  scheme: {
-    title: { type: 'string'},
-    background: { type: 'string'},
-    text: text_scheme
-  }
-}
-
-const blockWithPicture_scheme: IDataKey = {  
-  type: 'Object',
-  scheme: {
-    title: { type: 'string'},
-    background: { type: 'string'},
-    image: { type: 'string'},
-    text: text_scheme
-  }
-}
-
-const registerBlock_scheme: IDataKey = {
-  type: 'Object',
-  scheme: {
-    title: { type: 'string' },
-    bg: { type: 'string' }
-  }
-}
-
-const card_scheme: IDataKey = {
-  type: 'Object',
-  scheme: {
-    id: { type: 'number', },
-    title: { type: 'string', },
-    subtitle: { type: 'string', },
-    text: { type: 'string', },
-    url: { type: 'string', },
-  }
-}
-
-const cardsBlock_scheme: IDataKey = {
-  type: 'Object',
-  scheme: {
-    title: { type: 'string' },
-    cards: { 
-      type: 'Object',
-      scheme: [card_scheme] 
-    }
-  }
-}
-
-const scheme: IDataKey = {
-  type: 'Object',
-  scheme: {
-    beveledBlock: beveledBlock_scheme,
-    blockWithPicture: blockWithPicture_scheme,
-    cardsBlock: cardsBlock_scheme,
-    registerBlock: registerBlock_scheme,
-  }
-}  
-
-const mock = {
+const template_welcome_mock = {
     beveledBlock: {
       title: 'The Reliquary Project',
       background: '/images/backgrounds/reliquary-bg1.webp',
@@ -168,23 +90,25 @@ const mock = {
     }
   }
 
-export function DataEditorTest(){
-    const [data, setData] = useState<any>(mock)
 
-    const onChange: ChangeHandler = (props: InteractionProps) => {
-        setData(props.updated_src)
+  export const template_test_mock = { 
+    test: {
+        a: 1,
+        b: 'asdasd',
+        c: true,
+        d: false,
+        e: [1, 2, 3 ,4, 5],
+        f: [true, false, false, true]
     }
+}
 
-    return <>
-        <ReactJson 
-          src={data} 
-          onEdit={onChange} 
-          onAdd={onChange}
-          onDelete={onChange}
 
-          displayObjectSize
-          displayDataTypes
-        />
-        {/* <JSON_Editor data={data} onChange={onChange} scheme={scheme} /> */}
-    </>
+  export const Mocks = {
+    welcome: template_welcome_mock,
+    test: template_test_mock,
+  }
+
+  export const GetTemplateMock = (template: string) => {
+	const mock = Mocks[template]
+	return mock ?? {}
 }

@@ -1,6 +1,6 @@
 import statics from "src/statics"
-import { fetchJSON, IFetchProvider } from "src/tools"
-import { Params_List, Response_List } from ".."
+import { fetchJSON } from "src/tools"
+import { IFetchProvider, null_list, Params_List, Params_Paged, Response_ID, Response_List } from "src/tools/types"
 
 
 interface IItem{
@@ -16,29 +16,34 @@ interface IItem{
 
 type IData = Omit<IItem, 'id'>
 
-export const PackagesProvider = new class implements IFetchProvider{
+export const PackagesProvider = new class CPackagesProvider implements IFetchProvider{
 
-    async add(data: IData): Promise<Response_List> {
-        const res = await fetchJSON<Response_List>('POST', statics.host.api + '/api/v1/items/packages/add', data)
-        return res
+    async add(data: IData): Promise<Response_ID> {
+        const res = await fetchJSON<Response_ID>('POST', statics.host.api + '/api/v1/items/packages/add', data)
+        return { id: res ? res.id : 0 }
     }
 
-    async edit(id: number, data: IData): Promise<any> {
-        const res = await fetchJSON('POST', statics.host.api + '/api/v1/items/packages/add', { id, ...data } )
-        return res
+    async edit(data: IData): Promise<void> {
+        await fetchJSON('POST', statics.host.api + '/api/v1/items/packages/add', data)
+        return
     }
 
     async get(id: number): Promise<any> {
         throw new Error("Method not implemented.")
     }
 
-    async list(req: Params_List): Promise<Response_List> {
-        const res = await fetchJSON<Response_List>('POST', statics.host.api + '/api/v1/items/packages/list', req)
-        return res
+    async list(req: Params_Paged): Promise<Response_List> {
+        const { page, perpage } = req
+        const res = await fetchJSON<Response_List>('POST', statics.host.api + '/api/v1/items/packages/list', {
+            offset: page * perpage,
+            limit: perpage,
+            count: true,
+        })
+        return res ?? null_list
     }
 
     async delete(id: number): Promise<void> {
-        const res = await fetchJSON('DELETE', statics.host.api + '/api/v1/items/packages/delete', { id })
+        await fetchJSON('DELETE', statics.host.api + '/api/v1/items/packages/delete', { id })
         return
     }
 }

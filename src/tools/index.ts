@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { HttpMethod, JSType } from "./types";
+import { HttpMethod, IFetchProvider, JSType } from "./types";
 
 export function getCookie(name: string): string {
 	const { cookie } = document
@@ -57,11 +57,15 @@ export function getWindow() {
 
 export async function fetchJSON<ResponseType = any, BodyType = any>(method: HttpMethod, input: RequestInfo | URL, body?: BodyType) {
 	const res = await fetch(input, {
-		method,
-		headers: Header_Auth_JSON(),
+		method, headers: Header_Auth_JSON(),
 		body: body ? JSON.stringify(body) : undefined
 	})
-	return await res.json() as ResponseType
+	try{
+		return await res.json() as ResponseType
+	}
+	catch(error){
+		return
+	}
 }
 
 type IFetchEntry = [HttpMethod, RequestInfo | URL]
@@ -157,7 +161,8 @@ export async function uploadForm(form: HTMLFormElement) {
 }
 
 export type callback<Type> = () => Type
-type ICSSStyle = string | null | undefined
+type cssfunc = () => string | null | undefined
+type ICSSStyle = string | null | undefined | cssfunc 
 type ICSSStyleCondition = boolean | null | undefined
 type ICSSStyleArg = (ICSSStyle | callback<ICSSStyle> | [ICSSStyle, ICSSStyleCondition])
 
@@ -228,45 +233,61 @@ export const defaultField_BooleanSelect = {
 	]
 }
 
-export interface IFetchProvider{
-    add(data: any): Promise<any>
-    edit(id: number, data: any): Promise<any>
-    get(id: number): Promise<any>
-    list(req: any): Promise<any>
-    delete(id: number): Promise<void>
-}
+export type IValueHolder = Array<never> | Object
+export type IValuePathCB = (holder: IValueHolder, ki: string | number) => any
 
-export function useFetchProvider<ResponseType = any, BodyType = any>(provider: IFetchProvider, body?: BodyType){
-	const [state, setFetchState] = useState<IFetchState<ResponseType>>({ status: 0, isLoading: false })
-	const { data, status, isLoading, error } = state
+export function cbByPath(root: IValueHolder, path: string, cb: IValuePathCB){
+	let holder = root
 
-	const _fetch = async (body?: BodyType): Promise<IFetchResponse<ResponseType>> => {
-		if (body === undefined)
-			return { status: 0, data, error }
+	const parts = path.split('/')
+	if(parts.length){
+		let current = root
+		let lpart: any
 
-		try {
-			setFetchState({ status: 0, isLoading: true })
+		for(const part of parts){
+			holder = current
+			if(typeof current !== 'object' || current === null)
+				return
 
-			const response = await provider.list(body)
-
-			let json
-			try {
-				json = await response.json()
-			}
-			catch (error) {
-				json = undefined
-			}
-			setFetchState({ status: response.status, data: json, isLoading: false })
-			return { status: response.status, data: json }
+			current = current[part]
+			lpart = part
 		}
 
-		catch (error) {
-			setFetchState({ status: 0, isLoading: false, error })
-			return { status: 0, error }
-		}
+		return cb(holder, lpart)
 	}
 
-	useEffect(() => { _fetch(body) }, [])
+	return
+}
 
-	return { fetch: _fetch, data, error, status, isLoading, setFetchState, /*entry, method: _method*/ }
+export function ObjectRenameField(holder: Object, oldname: string, newname: string){
+	holder[newname] = holder[oldname]
+	delete holder[oldname]
+	return
+}
+
+export function GetHolderValueByPath(root: IValueHolder, path: string){
+	return cbByPath(root, path, (holder, ki) => holder[ki])
+}
+
+
+export function SetHolderValueByPath(root: IValueHolder, path: string, value: any){
+	cbByPath(root, path, (holder, ki) => { 
+		console.log({holder, path, ki, value})
+		holder[ki] = value 
+	})
+	return 
+}
+
+export function DeleteHolderValueByPath(root: IValueHolder, path: string){
+	cbByPath(root, path, (holder, ki) => { 
+		if(holder instanceof Array){
+			const index = typeof ki == 'string' ? parseInt(ki, 10) : ki
+			holder.slice(index, 1)
+			return
+		}
+
+		// else object
+		delete holder[ki] 
+	})
+	return
 }

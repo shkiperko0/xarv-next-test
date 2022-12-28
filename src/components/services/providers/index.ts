@@ -1,23 +1,11 @@
-export interface Params_ID{
-	id: number
-}
+import { Providers as MarketProviders } from './market'
+import { Providers as ApigateProviders } from './apigate'
+import { Providers as AuthProviders } from './auth'
+import { Providers as ContentProviders } from './content'
 
-export interface Response_ID{
-	id: number
-}
-
-export interface Params_List{
-	limit: number,
-	offset: number,
-	count?: true,
-}
-
-export interface Params_Paged{
-	page: number,
-	perpage: number,
-}
-
-export interface Response_List<Type=never>{
-    list: Type[],
-    count?: number
+export const Providers = {
+    apigate: ApigateProviders,
+    auth: AuthProviders,
+    content: ContentProviders,
+    market: MarketProviders
 }
