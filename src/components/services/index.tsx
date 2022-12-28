@@ -1,31 +1,28 @@
-import { LeftSide, RightSide, SidedDiv } from "@components/gui/Bars"
+import { Bar, Left, LeftSide, Right, RightSide, SidedDiv } from "@components/gui/Bars"
 import { Button } from "@components/gui/Button"
 import { Buttons }from "@components/gui/Buttons"
 import { ITableRowProps, Table } from "@components/gui/Table"
-import { Select } from "@components/gui/Select"
+import { IOptionData, Select } from "@components/gui/Select"
 import Head from "next/head"
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { ChangeEventHandler, MouseEventHandler, ReactChild } from "react"
+import { ChangeEventHandler, useEffect, useState } from "react"
 import { publicProfile, useAuth } from "src/contexts/auth"
-import statics from "src/statics"
-import { IButtonProps, JSType } from "src/tools/types"
-import { cl, Text2Type, Type2Text, AnyJSON_toBase64, clearAuthCookies, findByKey, useJSONFetch } from "src/tools"
-import { AddItemMenu } from "./panels/add-panel"
-import { EditItemMenu } from "./panels/edit-panel"
-import { PermissionsMenu } from "./panels/list-permissions"
-import { RolesMenu } from "./panels/list-roles"
+import { IButtonProps, IFetchProvider, JSType, Params_ID } from "src/tools/types"
+import { cl, Text2Type, Type2Text, clearAuthCookies } from "src/tools"
 import styles from "./styles.module.scss"
 import { Input } from "@components/gui/Input"
-import { IFieldInput, svcs_item } from "./models"
-import { useBackground } from "src/contexts/bg"
-import { useWindows } from "@components/taskmanager"
+import { IFieldInput, IModel, Models } from "./models"
+import { ITaskManagerContext, useWindows } from "@components/taskmanager"
 import { FileManager } from "@components/filemanager"
 import { DataEditorTest } from "./panels/data-editor"
 import { Slugger } from "@components/gui/Slugger"
 import { ConfirmDialog } from "@components/gui/Dialog"
 
 import { Menu as MarketMenu } from './panels/market'
+import { Pagination } from "@components/gui/Pagination"
+import { AddModel, EditModel, select_perpage_options } from "./panels/common"
+import { Providers } from "./providers"
 
 export { styles }
 
@@ -33,17 +30,6 @@ interface IService{
     name?: string,
     menu(props:{ data: IService }): JSX.Element,
     slug: string,
-
-    apiAddEntry?: string
-    apiEditEntry?: string
-    apiListEntry?: string
-    apiDeleteEntry?: string
-}
-
-interface IContentCategory{
-    id: number,
-    name: string,
-    title: string
 }
 
 const defaultDatesHeaderNames = {
@@ -54,81 +40,117 @@ const defaultDatesHeaderNames = {
 	deleted_at: 'Deleted At'
 }
 
-interface IDefaultArrayFetcherProps<Res>{
-    hook: ReturnType<typeof useJSONFetch<Res, any>>,
-    svc: IService,
+interface IDefaultArrayFetcherProps{
+    provider: IFetchProvider,
+    model: IModel,
 }
 
-export function DefaultArrayFetcher(props: IDefaultArrayFetcherProps<any>){
-    const { hook: { data: _data, isLoading, setFetchState }, svc } = props
-    const { push } = useRouter()
-    const { fetch } = useJSONFetch('DELETE', statics.host.api + svc.apiDeleteEntry)
-    const bg = useBackground()
+interface IListResponse{
+    list: any[],
+    count: number,
+}
 
-    let data: any[] | undefined = undefined
-    if(_data instanceof Array){
-        data = _data
+interface IListFetchState{
+    isLoading: boolean,
+    data: IListResponse,
+    page: number, 
+    perpage: number, 
+}
+
+interface IItemEvents{
+    onSave?(): void
+}
+
+const AddItem = (windows: ITaskManagerContext, model: IModel, provider: IFetchProvider, events: IItemEvents) => {
+    const window = windows.create()
+    const close = () => windows.close(window.id)
+    const { onSave } = events
+
+    window.options = {
+        title: "New item", 
+        className: styles.window
     }
-    
-    else if(_data instanceof Object && _data['list'] !== undefined){    
-        data = _data.list
+
+    window.content = <AddModel 
+        data={{}} 
+        model={model} 
+        provider={provider} 
+        onClose={() => close()}
+        onSave={() => { onSave && onSave(); close() }}
+    />
+
+    windows.add(window)
+}
+
+const EditItem = (windows: ITaskManagerContext, model: IModel, provider: IFetchProvider, item: any, events: IItemEvents) => {
+    const window = windows.create()
+    const close = () => windows.close(window.id)
+    const { onSave } = events
+
+    window.options = {
+        title: "Edit item", 
+        className: styles.window
     }
 
-    //console.log({some: 'a', data})
+    window.content = <EditModel 
+        data={item} 
+        model={model} 
+        provider={provider} 
+        onClose={close}
+        onSave={() => { onSave && onSave(); close() }}
+    />
 
-    //_data ? ((_data as any).list ?? _data) : undefined ()?.list ?? _data
+    windows.add(window)
+}
 
+export function DefaultArrayFetcher(props: IDefaultArrayFetcherProps){
+    const { model, provider } = props
 
-    const Actions = (svc.apiDeleteEntry || svc.apiEditEntry) ? ((props: ITableRowProps) => {
-        const { row, index } = props
+    const [ state, setState ] = useState<IListFetchState>({ 
+        isLoading: false,
+        data: { 
+            list: [], 
+            count: 0 
+        },
+        page: 0,
+        perpage: 10,
+    })
 
-        const onAccept_Delete = async () => {
-            fetch({
-                id: row['id'],
-                //name: row['name'],
-            }).then(({ data: res, status, error }) => {
-                bg.close();
+    const { data: { count, list }, isLoading, page, perpage } = state
 
-                if( status != 200 ){
-                    if(error){
-                        alert(`net error ` + error)
-                    } else if(res){
+    const windows = useWindows()
 
-                        const split = res.message.split(' ') as string []
-                        if(split[0] == 'PostgreDB'){
-                            const code = parseInt(split[2], 10)
-                            if(code == 23503){
-                                alert("foreign_key_violation: Item have foreign rows")
-                                return
-                            }
-                        }
+    const FetchList = async (state: IListFetchState) => {
+        setState({ ...state, isLoading: true })
 
-                        alert(`api error ` + res.message)
-                    }else{
-                        alert("wtf error")
-                    }
-                    return
-                }
-                setFetchState({ 
-                    status: 0,
-                    isLoading: false,
-                    data: data?.filter(({id}) => row.id != id)
-                })
-            }).catch((error) => {
-                if(error){
-                    alert(`default error ` + error)
-                }else{
-                    alert("uncatched error")
-                }
-            })
+        const promise = provider.list({ page, perpage })
+        promise.then(data => {
+            const { list, count } = data
+            setState({ ...state, isLoading: false, data })
+        })
+    }
+
+    const onClick_Add = () => AddItem(windows, model, provider, {
+        onSave: () => FetchList(state)
+    })
+
+    const onClick_Edit = (row: any) => EditItem(windows, model, provider, row, {
+        onSave: () => FetchList(state)
+    })
+
+    const onClick_Delete = (item: Params_ID) => {
+
+        const window = windows.create()
+
+        const onAccept = async () => { 
+            await provider.delete(item.id)
+            await FetchList(state)
+            windows.close(window.id); 
         }
-        
-        const onClick_Edit = () => 
-            push(`/services/edit?svc=${svc.slug}&index=${index}&data=${AnyJSON_toBase64(row)}`)
 
-        const onAccept = async () => { console.log('delete chosed'); await onAccept_Delete() }
-        const onReject = () => { bg.close(); console.log('cancel chosed') }
-        const onClick_BG = () => { bg.close(); console.log('bg cancel chosed') }
+        const onReject = () => { 
+            windows.close(window.id); 
+        }
 
         const Dialog = ({onAccept, onReject}) => (
             <ConfirmDialog className={styles.confirm_dialog} onAccept={onAccept} onReject={onReject} >
@@ -136,37 +158,69 @@ export function DefaultArrayFetcher(props: IDefaultArrayFetcherProps<any>){
             </ConfirmDialog>
         )
 
-        const onClick_Delete = () => bg.open(<Dialog {...{onAccept, onReject}}/>, onClick_BG)
-        
+        window.options = { title: 'Confirm delete' }
+        window.content = <Dialog {...{onAccept, onReject}}/>
+        windows.add(window)
+    }
+
+    useEffect(() => { FetchList(state) }, [page, perpage])
+
+    function onPerPageChange(option: IOptionData){
+        const { perpage, ...other } = state
+        setState({ perpage: option.value, ...other })
+    }
+
+    function onPageChange(nextpage: number){
+        const { page, ...other } = state
+        setState({ page: nextpage, ...other })
+    }
+
+    const Actions = (props: ITableRowProps) => {
+        const { row } = props
+
         return <Buttons>
-            { svc.apiEditEntry && <Button className={styles.button_edit} onClick={onClick_Edit}>Edit</Button> }
-            { svc.apiDeleteEntry && <Button className={styles.button_delete} onClick={onClick_Delete}>Delete</Button> }
+            { <Button className={styles.button_edit} onClick={() => onClick_Edit(row)}>Edit</Button> }
+            { <Button className={styles.button_delete} onClick={() => onClick_Delete(row)}>Delete</Button> }
         </Buttons>
-    }) : undefined
+    }
 
     if(isLoading){
         return <div className={styles.loading}>Loading</div>
     }
 
-    if(data){
-        if(!data.length) return <>No Data {'(length == 0)'}</>
-
-        const svc_item = svcs_item[svc.slug]
-        if(!svc_item || !svc) return <>svc?</>
+    if(list){
+        if(!list.length) return <>No Data {'(length == 0)'}</>
 
         const headers = {
-            ...Object.fromEntries(svc_item.fields.map((field) => {
+            ...Object.fromEntries(model.fields.map((field) => {
                 return [field.name, field.title ?? field.name]
             })),
             ...defaultDatesHeaderNames
         }
-
-        return <Table className={styles.table} headers={headers} data={data as any[]} columns={Actions ? { Actions } : undefined} />
+     
+        return <>
+            <Bar className={styles.svc_header}>
+                <Left className={styles.svc_name}>
+                    <span>{model.name}</span>
+                </Left>
+                <Right>
+                    <Button onClick={() => onClick_Add()}>Add item +</Button>
+                </Right>
+            </Bar>
+            <div className={styles.controls}>
+                <Select options={select_perpage_options} onSelect={onPerPageChange} currentValue={perpage}/>
+                <Pagination count={count} perpage={perpage} onChange={onPageChange} currentPage={page} />
+            </div>
+                <Table className={styles.table} data={list} columns={{Actions}} headers={headers} />
+            <div className={styles.controls}>
+                <Select options={select_perpage_options} onSelect={onPerPageChange} currentValue={perpage}/>
+                <Pagination count={count} perpage={perpage} onChange={onPageChange} currentPage={page} />
+            </div>
+        </>
     }
 
     return <>No Data {'(undefined)'}</>
 }
-
 
 interface IServiceButtonProps{
     data: IService
@@ -182,53 +236,11 @@ export function ServiceButton(props: IServiceButtonProps){
     </Link>
 }
 
-export interface IServiceProps{
-    data: IService
-}
-
-export interface IServiceMenuProps{
-    data: IService
-}
-
-export function ServiceMenu(props: IServiceMenuProps){
-    const { data: service } = props
-    const { query: { slug } , push } = useRouter()
-    return <>
-        <SidedDiv className={styles.svc_header}>
-            <LeftSide className={styles.svc_name}>
-                <span>{service.name}</span>
-            </LeftSide>
-            <RightSide>
-                <Button onClick={() => push(`add?svc=${service.slug}`)}>Add item +</Button>
-            </RightSide>
-        </SidedDiv>
-    </>
-}
-
-function RoutesMenu(props: IServiceMenuProps){
-    const hook = useJSONFetch<IContentCategory[], null>('GET', statics.host.api + props.data.apiListEntry, null)
-    return <>
-        <ServiceMenu data={props.data}/>
-        <DefaultArrayFetcher svc={props.data} hook={hook}/>   
-    </>
-}
-
-function UsersMenu(props: IServiceMenuProps){
-    const hook = useJSONFetch<IContentCategory[], any>('POST', statics.host.api + props.data.apiListEntry, { limit: 200, offset: 0 })
-    return <>
-        <ServiceMenu data={props.data}/>
-        <DefaultArrayFetcher svc={props.data} hook={hook}/>   
-    </>
-}
-
-function MCsMenu(props: IServiceMenuProps){
-    const hook = useJSONFetch<IContentCategory[], null>('GET', statics.host.api + props.data.apiListEntry, null)
-    return <>
-        <ServiceMenu data={props.data}/>
-        <DefaultArrayFetcher svc={props.data} hook={hook}/>  
-    </>
-}
-
+const RoutesMenu = () => <DefaultArrayFetcher model={Models.apigate.routes} provider={Providers.apigate.routes}/>   
+const UsersMenu = () => <DefaultArrayFetcher model={Models.auth.users} provider={Providers.auth.users}/> 
+const MCsMenu = () => <DefaultArrayFetcher model={Models.apigate.ms} provider={Providers.apigate.ms}/> 
+const PermissionsMenu = () => <DefaultArrayFetcher model={Models.auth.permissions} provider={Providers.auth.permissions}/> 
+const RolesMenu = () => <DefaultArrayFetcher model={Models.auth.roles} provider={Providers.auth.roles}/> 
 
 interface IItemFieldInputProps{
     name: string,
@@ -314,60 +326,32 @@ const services: IService[] = [
         name: 'Microservices',
         slug: 'ms',
         menu: MCsMenu,
-        apiAddEntry: '/api/v1/ms/add',
-        apiEditEntry: '/api/v1/ms/edit',
-        apiListEntry: '/api/v1/ms/list',
-        apiDeleteEntry: '/api/v1/ms/delete',
     },{ 
         name: 'Roles', 
         slug: 'roles',
         menu: RolesMenu,
-        apiAddEntry: '/api/v1/policy/roles/add',
-        apiEditEntry: '/api/v1/policy/roles/edit',
-        apiListEntry: '/api/v1/policy/roles/list',
-        apiDeleteEntry: '/api/v1/policy/roles/delete',
     },{ 
         name: 'Permissions',
         slug: 'permissions',
         menu: PermissionsMenu,
-        apiAddEntry: '/api/v1/policy/permissions/add',
-        apiEditEntry: '/api/v1/policy/permissions/edit',
-        apiListEntry: '/api/v1/policy/permissions/list',
-        apiDeleteEntry: '/api/v1/policy/permissions/delete',
     },{   
         name: 'Routes',
         slug: 'routes',
         menu: RoutesMenu,
-        apiAddEntry: '/api/v1/routes/add',
-        apiListEntry: '/api/v1/routes/list',
-        apiEditEntry: '/api/v1/routes/edit',
-        apiDeleteEntry: '/api/v1/routes/delete',
     },{ 
         name: 'Users',
         slug: 'users',
         menu: UsersMenu,
-        apiListEntry: '/api/v1/users/list',
-        apiEditEntry: '/api/v1/users/edit',
     },{ 
         name: 'Market MS',
         slug: 'market',
         menu: MarketMenu,
     },{ 
-        slug: 'add',
-        menu: AddItemMenu,
-    },{ 
-        slug: 'edit',
-        menu: EditItemMenu,
-    },{ 
         name: 'Data editor',
         slug: 'dedit',
         menu: DataEditorTest,
-        apiListEntry: '/api/v1/users/list',
-        apiEditEntry: '/api/v1/users/edit',
     },
 ]
-
-export const getServiceBySlug = (slug: string) => findByKey(services, 'slug', slug)
 
 export function Page_Services(props: any){
     return <>
@@ -405,7 +389,6 @@ function Topbar(){
 
     const openFilemanager = () => {
         windows.open(<FileManager/>, {
-            x: 'center',  y: 'center',
             w: '50vw', h: '50vh',
             title: 'File Manager',
         })
@@ -462,3 +445,44 @@ function Body(){
     </div>
 }
 
+/*
+
+            fetch({
+                id: row['id'],
+                //name: row['name'],
+            }).then(({ data: res, status, error }) => {
+                bg.close();
+
+                if( status != 200 ){
+                    if(error){
+                        alert(`net error ` + error)
+                    } else if(res){
+
+                        const split = res.message.split(' ') as string []
+                        if(split[0] == 'PostgreDB'){
+                            const code = parseInt(split[2], 10)
+                            if(code == 23503){
+                                alert("foreign_key_violation: Item have foreign rows")
+                                return
+                            }
+                        }
+
+                        alert(`api error ` + res.message)
+                    }else{
+                        alert("wtf error")
+                    }
+                    return
+                }
+                setFetchState({ 
+                    status: 0,
+                    isLoading: false,
+                    data: data?.filter(({id}) => row.id != id)
+                })
+            }).catch((error) => {
+                if(error){
+                    alert(`default error ` + error)
+                }else{
+                    alert("uncatched error")
+                }
+            })
+            */
