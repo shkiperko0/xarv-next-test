@@ -1,10 +1,14 @@
 namespace statics {
 
     export const host = {
-        main: 'http://192.168.0.25:3000', 
-        api: 'http://192.168.0.25',
+        // main: 'http://192.168.0.25:3000', 
+        // api: 'http://192.168.0.25',
         
-        eam: 'https://eamgames.net',
+        main: 'https://eamgames.net', 
+        api: 'https://api.eamgames.net',
+        
+
+        //eam: 'https://eamgames.net',
     }
 
     export const url = {
